@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>主动健康管理机构端 - 业务管理平台 (Semi Design)</title>
+    
+    <!-- 引入高雅中性与等宽字体 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=SF+Mono:wght@400;600&display=swap" rel="stylesheet">
+    
+    <!-- 引入 Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <!-- ==================== 左侧侧边栏导航 (Semi Design 风格) ==================== -->
+        <aside class="sidebar" id="sidebar-nav-container">
+            <div class="sidebar-header">
+                <img id="sidebar-logo" src="mock_assets/agency_logo.png" alt="Logo" class="agency-logo-img">
+                <div class="sidebar-title-group">
+                    <h1 class="agency-title">AI健康管理</h1>
+                    <p class="agency-subtitle">主动健康管理机构端</p>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item active" data-target="m07-dashboard">
+                        <!-- Semi Icon: Dashboard -->
+                        <svg class="semi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <rect x="3" y="3" width="7" height="9" rx="1" />
+                            <rect x="14" y="3" width="7" height="5" rx="1" />
+                            <rect x="14" y="12" width="7" height="9" rx="1" />
+                            <rect x="3" y="16" width="7" height="5" rx="1" />
+                        </svg>
+                        <span class="nav-text">业务监管大屏</span>
+                    </li>
+                    <li class="nav-item" data-target="m01-approval">
+                        <!-- Semi Icon: Users -->
+                        <svg class="semi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                            <circle cx="9" cy="7" r="4" />
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                        </svg>
+                        <span class="nav-text">医生入驻审批</span>
+                    </li>
+                    <li class="nav-item" data-target="m02-residents">
+                        <!-- Semi Icon: FileText -->
+                        <svg class="semi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                            <line x1="16" y1="13" x2="8" y2="13" />
+                            <line x1="16" y1="17" x2="8" y2="17" />
+                            <polyline points="10 9 9 9 8 9" />
+                        </svg>
+                        <span class="nav-text">在管居民档案</span>
+                    </li>
+                    <li class="nav-item" data-target="m03-schemes">
+                        <!-- Semi Icon: Briefcase -->
+                        <svg class="semi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+                            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+                        </svg>
+                        <span class="nav-text">调理方案维护</span>
+                    </li>
+                    <li class="nav-item" data-target="m04-service-packages">
+                        <!-- Semi Icon: Box -->
+                        <svg class="semi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                            <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                            <line x1="12" y1="22.08" x2="12" y2="12" />
+                        </svg>
+                        <span class="nav-text">调理服务包维护</span>
+                    </li>
+                    <li class="nav-item" data-target="m05-products">
+                        <!-- Semi Icon: ShoppingBag -->
+                        <svg class="semi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                            <line x1="3" y1="6" x2="21" y2="6" />
+                            <path d="M16 10a4 4 0 0 1-8 0" />
+                        </svg>
+                        <span class="nav-text">药食同源商品</span>
+                    </li>
+                    <li class="nav-item" data-target="m06-cms">
+                        <!-- Semi Icon: Layout -->
+                        <svg class="semi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                            <line x1="3" y1="9" x2="21" y2="9" />
+                            <line x1="9" y1="21" x2="9" y2="9" />
+                        </svg>
+                        <span class="nav-text">CMS 内容运营</span>
+                    </li>
+                    <li class="nav-item" data-target="m08-devices">
+                        <!-- Semi Icon: Watch / Smart Device -->
+                        <svg class="semi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <circle cx="12" cy="12" r="7" />
+                            <rect x="9" y="1" width="6" height="4" rx="1" />
+                            <rect x="9" y="19" width="6" height="4" rx="1" />
+                            <path d="M12 9v3l2 2" />
+                        </svg>
+                        <span class="nav-text">智能设备管理</span>
+                    </li>
+                    <li class="nav-item" data-target="m09-settings">
+                        <!-- Semi Icon: Settings -->
+                        <svg class="semi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <circle cx="12" cy="12" r="3" />
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                        </svg>
+                        <span class="nav-text">系统配置与日志</span>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="operator-profile">
+                    <div class="operator-avatar">A</div>
+                    <div class="operator-info">
+                        <p class="operator-name">李明</p>
+                        <p class="operator-role">超级管理员</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- ==================== 右侧核心主面板 ==================== -->
+        <main class="main-panel">
+            
+            <!-- 顶部控制条 -->
+            <header class="main-header" id="header-control-bar">
+                <div class="header-breadcrumb">
+                    <span class="parent-bc">机构控制台</span>
+                    <span class="bc-sep">/</span>
+                    <span id="current-bc-title" class="current-bc">业务监管大屏</span>
+                </div>
+                
+                <div class="header-right">
+                    <div id="system-clock" class="system-clock">2026-06-24 15:00:00</div>
+                    <div class="sys-notification">
+                        <svg class="semi-icon" style="width:20px; height:20px; color:var(--semi-color-text-2);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-7" />
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                        </svg>
+                        <span id="notify-badge" class="notify-badge">2</span>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- 各模块内容区 (采用单栏布局) -->
+            <div class="content-container" id="module-content-viewport">
+                
+                <!-- 1. M07: 业务监管大屏 (独立全深色大屏) -->
+                <section id="m07-dashboard" class="content-section active">
+                    <div class="dashboard-grid">
+                        
+                        <!-- KPI 卡片区 -->
+                        <div class="kpi-row">
+                            <div class="kpi-card hover-up">
+                                <div class="kpi-header">
+                                    <span class="kpi-title">在管居民总数</span>
+                                    <span class="kpi-trend trend-up">↑ 12.5%</span>
+                                </div>
+                                <div class="kpi-value-group">
+                                    <span id="kpi-residents" class="kpi-val">0</span>
+                                    <span class="kpi-unit">人</span>
+                                </div>
+                            </div>
+                            <div class="kpi-card hover-up">
+                                <div class="kpi-header">
+                                    <span class="kpi-title">在线智能设备</span>
+                                    <span class="kpi-trend">实时</span>
+                                </div>
+                                <div class="kpi-value-group">
+                                    <span id="kpi-devices" class="kpi-val">0</span>
+                                    <span class="kpi-unit">台</span>
+                                </div>
+                            </div>
+                            <div class="kpi-card hover-up warning-border">
+                                <div class="kpi-header">
+                                    <span class="kpi-title">高危红色警报</span>
+                                    <span class="kpi-trend trend-down">↓ 8%</span>
+                                </div>
+                                <div class="kpi-value-group">
+                                    <span id="kpi-warnings" class="kpi-val col-red bounce-anim">0</span>
+                                    <span class="kpi-unit col-red">人</span>
+                                </div>
+                            </div>
+                            <div class="kpi-card hover-up">
+                                <div class="kpi-header">
+                                    <span class="kpi-title">本月销售收入</span>
+                                    <span class="kpi-trend trend-up">↑ 22%</span>
+                                </div>
+                                <div class="kpi-value-group">
+                                    <span class="kpi-currency">¥</span>
+                                    <span id="kpi-revenue" class="kpi-val font-mono">0</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 大屏图表行一 -->
+                        <div class="chart-row-1">
+                            <div class="chart-card c-span-8">
+                                <h3 class="card-title">近 7 日风险警情与变化趋势</h3>
+                                <div class="chart-wrapper">
+                                    <canvas id="warningsTrendChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="chart-card c-span-4">
+                                <h3 class="card-title">预警风险类型占比</h3>
+                                <div class="chart-wrapper pie-wrapper">
+                                    <canvas id="warningsRatioChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 大屏数据行二 -->
+                        <div class="chart-row-2">
+                            <div class="data-table-card c-span-7">
+                                <h3 class="card-title">医生服务效率与绩效看板</h3>
+                                <div class="table-scroll">
+                                    <table class="premium-table">
+                                        <thead>
+                                            <tr>
+                                                <th>医生姓名</th>
+                                                <th>职称</th>
+                                                <th>干预居民数</th>
+                                                <th>方案下发量</th>
+                                                <th>预警平均响应</th>
+                                                <th>满意度评分</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="dashboard-doctors-list">
+                                            <!-- JS 渲染 -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <div class="device-monitor-card c-span-5">
+                                <h3 class="card-title">设备在线及电量监控态势</h3>
+                                <div class="device-status-content">
+                                    <div class="device-stats-bar">
+                                        <div class="device-bar-item">
+                                            <span class="stat-num text-green" id="dev-online-num">0</span>
+                                            <span class="stat-lbl">在线设备</span>
+                                        </div>
+                                        <div class="device-bar-item">
+                                            <span class="stat-num text-gray" id="dev-offline-num">0</span>
+                                            <span class="stat-lbl">离线设备</span>
+                                        </div>
+                                        <div class="device-bar-item">
+                                            <span class="stat-num text-red" id="dev-lowpower-num">0</span>
+                                            <span class="stat-lbl">低电量(&lt;20%)</span>
+                                        </div>
+                                    </div>
+                                    <div class="device-radar-container">
+                                        <div class="radar-scan"></div>
+                                        <div class="radar-ping p1"></div>
+                                        <div class="radar-ping p2"></div>
+                                        <div class="radar-center">📡</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- 2. M01: 医生入驻审批 (单栏表格 + 弹窗样式) -->
+                <section id="m01-approval" class="content-section">
+                    <div class="card-management-header">
+                        <div class="search-filter-row" style="margin-bottom: 0; gap: 10px;">
+                            <input type="text" id="doc-name-search" placeholder="搜索医生姓名..." class="premium-input" style="width: 180px;">
+                            <select id="doc-status-filter" class="premium-select" style="width: 140px;">
+                                <option value="">全部状态</option>
+                                <option value="pending">待审批</option>
+                                <option value="approved">已激活</option>
+                                <option value="disabled">已禁用</option>
+                                <option value="rejected">已驳回</option>
+                            </select>
+                            <select id="doc-dept-filter" class="premium-select" style="width: 140px;">
+                                <option value="">全部科室</option>
+                                <option value="中医内科">中医内科</option>
+                                <option value="治未病科">治未病科</option>
+                                <option value="康复医学科">康复医学科</option>
+                                <option value="针灸推拿科">针灸推拿科</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" id="btn-add-doc-modal">+ 添加医生</button>
+                    </div>
+                    
+                    <div class="table-view-container">
+                        <table class="premium-table">
+                            <thead>
+                                <tr>
+                                    <th>医生基本信息</th>
+                                    <th>执业科室</th>
+                                    <th>职称</th>
+                                    <th>专长方向</th>
+                                    <th>来源</th>
+                                    <th>在管人数</th>
+                                    <th>入驻状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="approval-docs-table-body">
+                                <!-- JS 动态渲染表格行 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+                
+                <!-- 3. M02: 在管居民档案 (单栏表格 + 弹窗样式) -->
+                <section id="m02-residents" class="content-section">
+                    <div class="card-management-header">
+                        <div class="search-filter-row" style="margin-bottom: 0;">
+                            <input type="text" id="res-search" placeholder="输入居民姓名/手机号检索..." class="premium-input" style="width: 280px;">
+                            <select id="res-level-filter" class="premium-select" style="width: 160px;">
+                                <option value="">全部健康评级</option>
+                                <option value="red">🔴 高危红色</option>
+                                <option value="yellow">🟡 亚健康黄色</option>
+                                <option value="green">🟢 正常绿色</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-secondary" id="btn-export-res">导出数据报表</button>
+                    </div>
+                    
+                    <div class="table-view-container">
+                        <table class="premium-table">
+                            <thead>
+                                <tr>
+                                    <th>居民姓名</th>
+                                    <th>性别</th>
+                                    <th>年龄</th>
+                                    <th>健康评级</th>
+                                    <th>责任医生</th>
+                                    <th>服务天数</th>
+                                    <th>最近联系时间</th>
+                                    <th>智能穿戴设备</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="residents-table-body">
+                                <!-- JS 动态渲染表格行 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+                
+                <!-- 4. M03: 调理方案维护 (单栏方案列表 + 独立编辑器预览弹窗) -->
+                <section id="m03-schemes" class="content-section">
+                    <div class="card-management-header">
+                        <div class="scheme-tabs" style="margin-bottom: 0;">
+                            <button class="scheme-tab active" data-type="sleep">睡眠报告</button>
+                            <button class="scheme-tab" data-type="cardio">脑血管报告</button>
+                            <button class="scheme-tab" data-type="pressure">情绪压力报告</button>
+                        </div>
+                        <button class="btn btn-primary" id="btn-create-scheme">+ 创建方案模板</button>
+                    </div>
+                    
+                    <div class="table-view-container">
+                        <table class="premium-table">
+                            <thead>
+                                <tr>
+                                    <th>方案名称</th>
+                                    <th>检测报告分类</th>
+                                    <th>节点数量</th>
+                                    <th>关联产品数</th>
+                                    <th>最后编辑时间</th>
+                                    <th>发布状态</th>
+                                    <th>C端在线</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="schemes-table-body">
+                                <!-- JS 动态渲染表格行 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+                
+                <!-- 5. M04: 调理服务包维护 -->
+                <section id="m04-service-packages" class="content-section">
+                    <div class="card-management-header">
+                        <h2 class="section-main-title">标准化健康调理服务包</h2>
+                        <button class="btn btn-primary" id="btn-add-package">+ 新增健康服务包</button>
+                    </div>
+                    <div class="table-view-container">
+                        <table class="premium-table">
+                            <thead>
+                                <tr>
+                                    <th>服务包名称</th>
+                                    <th>服务周期</th>
+                                    <th>销售价格</th>
+                                    <th>累计销量</th>
+                                    <th>累计营业额</th>
+                                    <th>转化率</th>
+                                    <th>在线在售</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="packages-table-body">
+                                <!-- JS 动态渲染表格行 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+                
+                <!-- 6. M05: 药食同源商品 -->
+                <section id="m05-products" class="content-section">
+                    <div class="card-management-header">
+                        <div class="filter-group">
+                            <button class="btn btn-secondary filter-prod-btn active" data-cat="">全部商品</button>
+                            <button class="btn btn-secondary filter-prod-btn" data-cat="茶类">茶饮类</button>
+                            <button class="btn btn-secondary filter-prod-btn" data-cat="膳类">膳食类</button>
+                            <button class="btn btn-secondary filter-prod-btn" data-cat="浴类">足浴包</button>
+                        </div>
+                        <button class="btn btn-primary" id="btn-add-product">+ 新建商品信息</button>
+                    </div>
+                    <div class="table-view-container">
+                        <table class="premium-table">
+                            <thead>
+                                <tr>
+                                    <th>商品图片</th>
+                                    <th>商品名称</th>
+                                    <th>所属分类</th>
+                                    <th>商品售价</th>
+                                    <th>物理库存</th>
+                                    <th>在售状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="products-table-body">
+                                <!-- JS 动态渲染表格行 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+                
+                <!-- 7. M06: CMS 内容运营 -->
+                <section id="m06-cms" class="content-section">
+                    <div class="cms-layout">
+                        <!-- Banner 管理 -->
+                        <div class="cms-card">
+                            <div class="card-management-header" style="padding: 0 0 16px 0; border-bottom: none; display: flex; justify-content: space-between; align-items: center;">
+                                <h3 class="card-title" style="margin-bottom:0;">首页轮播 Banner 广告位投放</h3>
+                                <button class="btn btn-primary" id="btn-add-banner-modal">+ 新增广告 Banner</button>
+                            </div>
+                            <div class="table-view-container">
+                                <table class="premium-table">
+                                    <thead>
+                                        <tr>
+                                            <th>广告图</th>
+                                            <th>广告标题</th>
+                                            <th>跳转链接</th>
+                                            <th>有效期区间</th>
+                                            <th>展现状态</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="banners-table-body">
+                                        <!-- JS 渲染 -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- 推荐名医权重设置 -->
+                        <div class="cms-card" style="margin-top: 24px;">
+                            <div class="card-management-header" style="padding: 0 0 16px 0; border-bottom: none; display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <h3 class="card-title" style="margin-bottom:0;">医生主页推荐与曝光权重分设置</h3>
+                                    <p class="section-desc" style="margin-top: 4px; margin-bottom: 0;">修改权重分可实时变更居民端名医列表的排序优先级 (降序展示)。</p>
+                                </div>
+                                <button class="btn btn-primary" id="btn-add-recommend-doc-modal">+ 添加推荐医生</button>
+                            </div>
+                            <div class="table-scroll">
+                                <table class="premium-table">
+                                    <thead>
+                                        <tr>
+                                            <th>医生姓名</th>
+                                            <th>专长方向</th>
+                                            <th>推荐宣传语</th>
+                                            <th>权重(1-100)</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="cms-doctors-weight-list">
+                                        <!-- JS 渲染 -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- 8. M08: 智能设备管理 -->
+                <section id="m08-devices" class="content-section">
+                    <div class="table-view-container">
+                        <div class="table-view-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                            <h3 class="card-title" style="margin-bottom:0;">机构发放智能手表电量与心跳连结清单</h3>
+                            <select id="device-status-filter" class="premium-select" style="width:160px;">
+                                <option value="">所有状态</option>
+                                <option value="online">在线</option>
+                                <option value="offline">离线</option>
+                                <option value="lowpower">⚠️ 最低电量(&lt;20%)</option>
+                            </select>
+                        </div>
+                        <div class="table-scroll">
+                            <table class="premium-table">
+                                <thead>
+                                    <tr>
+                                        <th>智能设备 IMEI</th>
+                                        <th>在线状态</th>
+                                        <th>当前电量</th>
+                                        <th>持有居民</th>
+                                        <th>最后心跳连结</th>
+                                        <th>OTA固件版本</th>
+                                        <th>控制指令</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="devices-table-list">
+                                    <!-- JS 渲染 -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- 9. M09: 系统配置与日志 -->
+                <section id="m09-settings" class="content-section">
+                    <div class="settings-outer-container">
+                        <!-- 左侧垂直二级子菜单 -->
+                        <aside class="settings-sidebar">
+                            <ul class="settings-menu-list">
+                                <li class="settings-menu-item active" data-subtab="subaccounts-panel">子账号管理</li>
+                                <li class="settings-menu-item" data-subtab="auditlogs-panel">操作日志审计</li>
+                                <li class="settings-menu-item" data-subtab="commission-panel">费率与分佣配置</li>
+                                <li class="settings-menu-item" data-subtab="agencyinfo-panel">机构基础配置</li>
+                            </ul>
+                        </aside>
+                        
+                        <!-- 右侧内容区 -->
+                        <div class="settings-content-wrapper">
+                            <!-- 9.1 子账号管理 -->
+                            <div id="subaccounts-panel" class="settings-sub-panel active">
+                                <div class="add-subaccount-row" style="margin-bottom: 20px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                                    <input type="text" id="sub-username" placeholder="登录账号 (如 kefu_03)" class="premium-input" style="width:150px;">
+                                    <input type="text" id="sub-nickname" placeholder="姓名" class="premium-input" style="width:100px;">
+                                    <input type="password" id="sub-password" placeholder="初始密码" class="premium-input" style="width:120px;">
+                                    <input type="text" id="sub-phone" placeholder="手机号" class="premium-input" style="width:130px;">
+                                    <input type="email" id="sub-email" placeholder="电子邮箱" class="premium-input" style="width:150px;">
+                                    <select id="sub-role" class="premium-select" style="width:90px;">
+                                        <option value="kefu">客服</option>
+                                        <option value="ops">运营</option>
+                                    </select>
+                                    <button class="btn btn-primary" id="btn-create-subaccount">新增子账号</button>
+                                </div>
+                                <div class="table-view-container">
+                                    <table class="premium-table">
+                                        <thead>
+                                            <tr>
+                                                <th>账号用户名</th>
+                                                <th>昵称</th>
+                                                <th>分配角色</th>
+                                                <th>手机号</th>
+                                                <th>电子邮箱</th>
+                                                <th>创建日期</th>
+                                                <th>账户状态</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="subaccounts-table-list">
+                                            <!-- JS 渲染 -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <!-- 9.2 操作日志审计 -->
+                            <div id="auditlogs-panel" class="settings-sub-panel">
+                                <div class="search-filter-row" style="margin-bottom: 16px;">
+                                    <input type="text" id="audit-log-search" placeholder="输入关键字搜索日志行为..." class="premium-input" style="width: 320px;">
+                                    <button class="btn btn-secondary" id="btn-clear-search-log">重置条件</button>
+                                </div>
+                                <div class="table-view-container">
+                                    <table class="premium-table compact">
+                                        <thead>
+                                            <tr>
+                                                <th>操作时间</th>
+                                                <th>操作人员</th>
+                                                <th>行为事件描述</th>
+                                                <th>客户端 IP</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="auditlogs-table-list">
+                                            <!-- JS 渲染 -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <!-- 9.3 费率与分佣配置 [多机构表格重构] -->
+                            <div id="commission-panel" class="settings-sub-panel">
+                                <div class="table-view-container">
+                                    <table class="premium-table">
+                                        <thead>
+                                            <tr>
+                                                <th>机构名称</th>
+                                                <th>系统订阅年费 (元/年)</th>
+                                                <th>商品销售分佣比例 (%)</th>
+                                                <th>健康服务抽成比例 (%)</th>
+                                                <th>操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="commission-table-list">
+                                            <!-- JS 动态渲染多机构费率 -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <!-- 9.4 机构基础配置 -->
+                            <div id="agencyinfo-panel" class="settings-sub-panel">
+                                <form id="agency-info-form" class="settings-form" style="max-width: 600px;">
+                                    <div class="form-row">
+                                        <label class="premium-label">机构名称</label>
+                                        <input type="text" id="agency-name" class="premium-input">
+                                    </div>
+                                    <div class="form-row">
+                                        <label class="premium-label">客服电话</label>
+                                        <input type="text" id="agency-phone" class="premium-input">
+                                    </div>
+                                    <div class="form-row">
+                                        <label class="premium-label">服务区域</label>
+                                        <input type="text" id="agency-area" class="premium-input">
+                                    </div>
+                                    <div class="form-row">
+                                        <label class="premium-label">机构描述</label>
+                                        <textarea id="agency-desc" class="premium-textarea" rows="4"></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary" style="margin-top: 10px;">更新机构资料</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+            </div>
+        </main>
+    </div>
+
+    <!-- ==================== Semi Design 弹出式模态框系统 (Modals) ==================== -->
+    
+    <!-- 模态框 1：医生审批与详情弹窗 -->
+    <div class="modal" id="doc-approval-modal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3 class="modal-title">医生执业资质审批详情</h3>
+                <span class="modal-close" data-close="doc-approval-modal">&times;</span>
+            </div>
+            <div class="modal-body" id="doc-approval-modal-body">
+                <!-- JS 动态注入详情 -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- 模态框 2：居民健康画像弹窗 (超宽弹窗) -->
+    <div class="modal modal-lg" id="resident-portrait-modal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3 class="modal-title" id="res-portrait-title">在管居民健康档案与大数据画像</h3>
+                <span class="modal-close" data-close="resident-portrait-modal">&times;</span>
+            </div>
+            <div class="modal-body" id="res-portrait-modal-body">
+                <!-- JS 动态注入画像图表 -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- 模态框 3：调理方案编辑器与手机预览弹窗 (超宽弹窗) -->
+    <div class="modal modal-lg" id="scheme-editor-modal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3 class="modal-title" id="scheme-editor-title">调理方案配置编辑器</h3>
+                <span class="modal-close" data-close="scheme-editor-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="scheme-editor-layout">
+                    <!-- 左侧：方案编辑区 -->
+                    <div class="scheme-content-panel" id="scheme-config-editor">
+                        <!-- JS 动态注入编辑器内容 -->
+                    </div>
+                    
+                    <!-- 右侧：手机端实时预览 -->
+                    <div class="scheme-preview-panel">
+                        <h4 style="font-size:12px; color:var(--semi-color-text-2); margin-bottom:10px;">居民端 C 端实时效果联动</h4>
+                        <div class="phone-mockup">
+                            <div class="phone-screen">
+                                <div class="phone-status-bar">
+                                    <span class="time">15:00</span>
+                                    <span class="icons">🔋 📶</span>
+                                </div>
+                                <div class="phone-header">
+                                    <span class="back-arrow">←</span>
+                                    <span class="title">调理指导意见</span>
+                                    <span class="more-icon">•••</span>
+                                </div>
+                                <div class="phone-content" id="phone-preview-body">
+                                    <div class="phone-empty">在左侧编辑方案节点以在手机内预览</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 模态框 4：直加医生录入 -->
+    <div class="modal" id="add-doctor-modal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3 class="modal-title">直加激活医生账户</h3>
+                <span class="modal-close" data-close="add-doctor-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="form-add-doctor">
+                    <div class="form-row">
+                        <label class="premium-label">医生姓名 *</label>
+                        <input type="text" id="new-doc-name" required class="premium-input">
+                    </div>
+                    <div class="form-row-grid">
+                        <div class="form-row">
+                            <label class="premium-label">执业科室</label>
+                            <select id="new-doc-dept" class="premium-select">
+                                <option value="中医内科">中医内科</option>
+                                <option value="治未病科">治未病科</option>
+                                <option value="康复医学科">康复医学科</option>
+                                <option value="针灸推拿科">针灸推拿科</option>
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <label class="premium-label">职称等级</label>
+                            <select id="new-doc-title" class="premium-select">
+                                <option value="主任医师">主任医师</option>
+                                <option value="副主任医师">副主任医师</option>
+                                <option value="主治医师">主治医师</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <label class="premium-label">联系电话 *</label>
+                        <input type="text" id="new-doc-phone" required class="premium-input">
+                    </div>
+                    <div class="form-row">
+                        <label class="premium-label">微信号</label>
+                        <input type="text" id="new-doc-wechat" class="premium-input">
+                    </div>
+                    <div class="form-row">
+                        <label class="premium-label">专长调理标签 (英文逗号分隔)</label>
+                        <input type="text" id="new-doc-tags" placeholder="例如: 脾胃调理,失眠多梦,慢病管理" class="premium-input">
+                    </div>
+                    <div class="form-row">
+                        <label class="premium-label">学术简介说明</label>
+                        <textarea id="new-doc-bio" class="premium-textarea" rows="3"></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-close="add-doctor-modal">取消</button>
+                        <button type="submit" class="btn btn-primary">立即激活创建</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 模态框 5：商品编辑 -->
+    <div class="modal" id="product-modal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3 class="modal-title" id="prod-modal-title">编辑药食同源商品</h3>
+                <span class="modal-close" data-close="product-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="form-edit-product">
+                    <input type="hidden" id="edit-prod-id">
+                    <div class="form-row">
+                        <label class="premium-label">商品名称 *</label>
+                        <input type="text" id="edit-prod-name" required class="premium-input">
+                    </div>
+                    <div class="form-row-grid">
+                        <div class="form-row">
+                            <label class="premium-label">品类</label>
+                            <select id="edit-prod-cat" class="premium-select">
+                                <option value="茶类">茶饮类</option>
+                                <option value="膳类">膳食类</option>
+                                <option value="浴类">足浴包</option>
+                                <option value="智能硬件">智能硬件</option>
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <label class="premium-label">单价 (元) *</label>
+                            <input type="number" step="0.01" id="edit-prod-price" required class="premium-input">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <label class="premium-label">当前物理库存 *</label>
+                        <input type="number" id="edit-prod-stock" required class="premium-input">
+                    </div>
+                    <div class="form-row">
+                        <label class="premium-label">详细成分与描述说明</label>
+                        <textarea id="edit-prod-desc" class="premium-textarea" rows="2"></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-close="product-modal">取消</button>
+                        <button type="submit" class="btn btn-primary">保存修改</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 模态框 6：商品变更日志 -->
+    <div class="modal" id="prod-log-modal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3 class="modal-title">库存调整历史审计日志</h3>
+                <span class="modal-close" data-close="prod-log-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <table class="premium-table compact">
+                    <thead>
+                        <tr>
+                            <th>变更录入时间</th>
+                            <th>库存变动值</th>
+                            <th>经办管理人员</th>
+                        </tr>
+                    </thead>
+                    <tbody id="prod-change-log-tbody">
+                        <!-- JS 渲染 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 模态框 7：服务包编辑 -->
+    <div class="modal" id="package-modal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3 class="modal-title" id="pkg-modal-title">调理健康包配置</h3>
+                <span class="modal-close" data-close="package-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="form-edit-package">
+                    <input type="hidden" id="edit-pkg-id">
+                    <div class="form-row">
+                        <label class="premium-label">服务包名称 *</label>
+                        <input type="text" id="edit-pkg-name" required class="premium-input">
+                    </div>
+                    <div class="form-row-grid">
+                        <div class="form-row">
+                            <label class="premium-label">服务周期</label>
+                            <select id="edit-pkg-period" class="premium-select">
+                                <option value="包月">包月</option>
+                                <option value="包季">包季</option>
+                                <option value="包年">包年</option>
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <label class="premium-label">服务定价 (元) *</label>
+                            <input type="number" step="0.01" id="edit-pkg-price" required class="premium-input">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <label class="premium-label">详细包含服务说明</label>
+                        <textarea id="edit-pkg-desc" class="premium-textarea" rows="3"></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-close="package-modal">取消</button>
+                        <button type="submit" class="btn btn-primary">保存发布</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 模态框 8：Banner 广告编辑/新增 -->
+    <div class="modal" id="banner-modal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3 class="modal-title" id="banner-modal-title">编辑首页轮播 Banner 广告</h3>
+                <span class="modal-close" data-close="banner-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="form-edit-banner">
+                    <input type="hidden" id="edit-ban-id">
+                    <div class="form-row">
+                        <label class="premium-label">Banner 广告标题 *</label>
+                        <input type="text" id="edit-ban-title" required class="premium-input">
+                    </div>
+                    <div class="form-row">
+                        <label class="premium-label">点击跳转外部链接 *</label>
+                        <input type="text" id="edit-ban-url" required class="premium-input">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-close="banner-modal">取消</button>
+                        <button type="submit" class="btn btn-primary" id="btn-banner-submit">保存发布</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 模态框 10：添加推荐医生 -->
+    <div class="modal" id="recommend-doc-modal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3 class="modal-title">添加推荐医生至主页</h3>
+                <span class="modal-close" data-close="recommend-doc-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="form-add-recommend-doc">
+                    <div class="form-row">
+                        <label class="premium-label">选择在管医生 *</label>
+                        <select id="recommend-doc-select" class="premium-select" required>
+                            <!-- 动态加载未推荐的已入驻医生 -->
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <label class="premium-label">推荐宣传语 *</label>
+                        <input type="text" id="recommend-doc-intro" required class="premium-input" placeholder="请输入医生主页宣传语，如：国医名师，深谙脾胃调理之法">
+                    </div>
+                    <div class="form-row">
+                        <label class="premium-label">曝光权重分 (1-100) *</label>
+                        <input type="number" id="recommend-doc-weight" min="1" max="100" required class="premium-input" placeholder="请输入权重值，值越大排序越靠前">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-close="recommend-doc-modal">取消</button>
+                        <button type="submit" class="btn btn-primary">确认添加</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 模态框 11：机构费率与分佣编辑 -->
+    <div class="modal" id="commission-edit-modal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3 class="modal-title">编辑机构费率与分佣配置</h3>
+                <span class="modal-close" data-close="commission-edit-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="form-edit-commission">
+                    <input type="hidden" id="edit-comm-agency-id">
+                    <div class="form-row">
+                        <label class="premium-label">机构名称</label>
+                        <input type="text" id="edit-comm-agency-name" class="premium-input" readonly style="background-color: var(--semi-color-fill-0); cursor: not-allowed;">
+                    </div>
+                    <div class="form-row">
+                        <label class="premium-label">系统订阅年费 (元/年) *</label>
+                        <input type="number" step="0.01" min="0" id="edit-comm-sub-fee" class="premium-input" placeholder="请输入系统订阅年费" required>
+                    </div>
+                    <div class="form-row">
+                        <label class="premium-label">商品销售分佣比例 (%) *</label>
+                        <input type="number" step="0.1" min="0" max="100" id="edit-comm-prod-rate" class="premium-input" placeholder="请输入商品分佣比例" required>
+                    </div>
+                    <div class="form-row">
+                        <label class="premium-label">健康服务抽成比例 (%) *</label>
+                        <input type="number" step="0.1" min="0" max="100" id="edit-comm-serv-rate" class="premium-input" placeholder="请输入服务抽成比例" required>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-close="commission-edit-modal">取消</button>
+                        <button type="submit" class="btn btn-primary">保存修改</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 模态框 9：通用警告与二次确认弹窗 -->
+    <div class="modal modal-sm" id="confirm-warning-modal">
+        <div class="modal-dialog">
+            <div class="modal-header header-warning" style="border-bottom: none; padding-bottom: 0;">
+                <h3 class="modal-title" id="confirm-warning-title" style="color: var(--semi-color-danger); display: flex; align-items: center; gap: 8px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px; color: var(--semi-color-warning);">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                        <line x1="12" y1="9" x2="12" y2="13"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                    <span>操作确认</span>
+                </h3>
+                <span class="modal-close" data-close="confirm-warning-modal">&times;</span>
+            </div>
+            <div class="modal-body" style="padding-top: 10px; padding-bottom: 20px;">
+                <p id="confirm-warning-message" style="font-size: 14px; color: var(--semi-color-text-0); font-weight: 500; margin: 0; line-height: 1.5;">确认要执行此高风险操作吗？</p>
+            </div>
+            <div class="modal-footer" style="border-top: none; padding-top: 0; justify-content: flex-end; gap: 8px;">
+                <button type="button" class="btn btn-secondary" data-close="confirm-warning-modal">取消</button>
+                <button type="button" class="btn btn-danger" id="btn-confirm-warning-submit">确认执行</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 前后端连接逻辑 ==================== -->
+    <script src="app_connect.js"></script>
+</body>
+</html>

@@ -1,0 +1,1508 @@
+/* ==========================================================================
+   主动健康管理机构端 - Semi Design B端设计规范系统 (UI/UX Pro Max 动效升级版)
+   ========================================================================== */
+
+/* -------------------- 1. Semi Design 全局代币 (Design Tokens) -------------------- */
+:root {
+    /* 字体 */
+    --semi-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    --semi-font-mono: 'SF Mono', 'SFMono-Regular', Consolas, "Liberation Mono", Courier, monospace;
+    
+    /* 品牌主色 (Semi Blue) */
+    --semi-color-primary: #0064FA;
+    --semi-color-primary-hover: #2985FF;
+    --semi-color-primary-active: #0052D9;
+    --semi-color-primary-disabled: #A5C8FF;
+    --semi-color-primary-light: #E8F2FF;
+    
+    /* 状态与辅助色 */
+    --semi-color-success: #00B365;
+    --semi-color-warning: #FC8800;
+    --semi-color-danger: #F93920;
+    
+    /* 日间模式 (Bright Mode) */
+    --semi-color-bg-0: #FFFFFF;               /* 亮色卡片背景 */
+    --semi-color-bg-1: #F9F9FC;               /* 亮色全局底色 */
+    --semi-color-border: #E6E8EB;             /* 边框色 */
+    --semi-color-text-0: #1F2429;             /* 主文本 */
+    --semi-color-text-1: #4F5660;             /* 次文本 */
+    --semi-color-text-2: #808893;             /* 辅助/静默文本 */
+    
+    /* 阴影与圆角 */
+    --semi-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.04), 0 1px 1px 0 rgba(0, 0, 0, 0.02);
+    --semi-shadow-md: 0 4px 12px 0 rgba(0, 0, 0, 0.05), 0 1px 3px 0 rgba(0, 0, 0, 0.02);
+    --semi-shadow-lg: 0 16px 36px 0 rgba(0, 0, 0, 0.1), 0 4px 12px 0 rgba(0, 0, 0, 0.05);
+    
+    --semi-border-radius-sm: 3px;
+    --semi-border-radius-md: 6px;
+    --semi-border-radius-lg: 10px;
+    
+    /* 动效过渡 (贝塞尔缓动) */
+    --semi-transition-smooth: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    --semi-transition-bounce: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* -------------------- 2. 全局重置与排版 -------------------- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--semi-font-sans);
+    background-color: var(--semi-color-bg-1);
+    color: var(--semi-color-text-0);
+    font-size: 14px;
+    line-height: 1.5;
+    overflow: hidden;
+    height: 100vh;
+}
+
+/* 渐变式亮暗主题过渡切换 */
+body, .sidebar, .main-header, .main-panel, .kpi-card, .chart-card, .data-table-card, .device-monitor-card, .premium-input, .premium-select, .premium-textarea {
+    transition: background-color 0.35s ease, border-color 0.35s ease, color 0.35s ease, box-shadow 0.35s ease;
+}
+
+/* -------------------- 3. 基础布局框架 (日间模式) -------------------- */
+.app-container {
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+}
+
+/* 侧边栏 */
+.sidebar {
+    width: 240px;
+    height: 100%;
+    background-color: var(--semi-color-bg-0);
+    border-right: 1px solid var(--semi-color-border);
+    display: flex;
+    flex-direction: column;
+    padding: 16px 8px;
+    z-index: 100;
+}
+
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 10px 20px 10px;
+    border-bottom: 1px solid var(--semi-color-border);
+}
+
+.agency-logo-img {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+    border-radius: var(--semi-border-radius-sm);
+}
+
+.sidebar-title-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.agency-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--semi-color-text-0);
+}
+
+.agency-subtitle {
+    font-size: 10px;
+    color: var(--semi-color-text-2);
+}
+
+.sidebar-nav {
+    flex: 1;
+    margin-top: 16px;
+    overflow-y: auto;
+}
+
+.nav-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    border-radius: var(--semi-border-radius-md);
+    cursor: pointer;
+    color: var(--semi-color-text-1);
+    font-size: 13px;
+    font-weight: 500;
+    transition: var(--semi-transition-smooth);
+}
+
+.nav-item:hover {
+    background-color: rgba(0, 0, 0, 0.03);
+    color: var(--semi-color-text-0);
+    transform: translateX(2px);
+}
+
+.nav-item.active {
+    background-color: var(--semi-color-primary-light);
+    color: var(--semi-color-primary);
+    font-weight: 600;
+}
+
+.nav-item.active:hover {
+    transform: none; /* 激活项不发生位移 */
+}
+
+.semi-icon {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    flex-shrink: 0;
+    transition: var(--semi-transition-smooth);
+}
+
+.nav-item:hover .semi-icon {
+    transform: scale(1.08);
+}
+
+.sidebar-footer {
+    border-top: 1px solid var(--semi-color-border);
+    padding-top: 12px;
+}
+
+.operator-profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 8px;
+}
+
+.operator-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: var(--semi-color-primary);
+    color: #fff;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+}
+
+.operator-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.operator-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--semi-color-text-0);
+}
+
+.operator-role {
+    font-size: 10px;
+    color: var(--semi-color-text-2);
+}
+
+/* 主显示区 */
+.main-panel {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background-color: var(--semi-color-bg-1);
+}
+
+.main-header {
+    height: 60px;
+    background-color: var(--semi-color-bg-0);
+    border-bottom: 1px solid var(--semi-color-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    z-index: 90;
+}
+
+.header-breadcrumb {
+    font-size: 13px;
+    color: var(--semi-color-text-1);
+}
+
+.bc-sep {
+    margin: 0 6px;
+    color: var(--semi-color-text-2);
+}
+
+.current-bc {
+    font-weight: 600;
+    color: var(--semi-color-text-0);
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.system-clock {
+    font-family: var(--semi-font-mono);
+    font-size: 12px;
+    color: var(--semi-color-text-1);
+    background-color: var(--semi-color-bg-1);
+    padding: 4px 10px;
+    border-radius: var(--semi-border-radius-sm);
+    border: 1px solid var(--semi-color-border);
+}
+
+.sys-notification {
+    position: relative;
+    cursor: pointer;
+}
+
+.notify-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background-color: var(--semi-color-danger);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #fff;
+}
+
+/* 内容布局 */
+.content-container {
+    flex: 1;
+    width: 100%;
+    overflow-y: auto;
+    position: relative;
+}
+
+.content-section {
+    display: none;
+    width: 100%;
+    padding: 20px 24px;
+    animation: semiFadeIn 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+}
+
+.content-section.active {
+    display: block;
+}
+
+@keyframes semiFadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* -------------------- 4. 大屏暗色模式独占类 (.semi-always-dark) -------------------- */
+.semi-always-dark {
+    /* 覆盖颜色变量为暗色模式 */
+    --semi-color-bg-0: #1E1E24;
+    --semi-color-bg-1: #16161A;
+    --semi-color-border: #2E2E38;
+    --semi-color-text-0: #F8FAFC;
+    --semi-color-text-1: #94A3B8;
+    --semi-color-text-2: #64748B;
+}
+
+/* 仅在暗色模式下，对侧边栏与头部进行深色背景强化 */
+.semi-always-dark .sidebar {
+    background-color: #121216;
+}
+
+.semi-always-dark .nav-item:hover {
+    background-color: rgba(255, 255, 255, 0.04);
+}
+
+.semi-always-dark .nav-item.active {
+    background-color: rgba(0, 100, 250, 0.15);
+    color: #3b82f6;
+}
+
+.semi-always-dark .main-header {
+    background-color: #121216;
+}
+
+.semi-always-dark .system-clock {
+    background-color: #16161A;
+    border-color: #2E2E38;
+}
+
+.semi-always-dark #m07-dashboard {
+    background-color: #16161A;
+}
+
+/* 大屏下卡片增强：科技感虚化阴影 */
+.semi-always-dark .kpi-card,
+.semi-always-dark .chart-card,
+.semi-always-dark .data-table-card,
+.semi-always-dark .device-monitor-card {
+    background-color: #1E1E24;
+    border-color: rgba(0, 100, 250, 0.15);
+    box-shadow: 0 4px 20px rgba(0, 100, 250, 0.06);
+}
+
+.semi-always-dark .kpi-card.warning-border {
+    border-left: 3px solid var(--semi-color-danger);
+    box-shadow: 0 4px 20px rgba(249, 57, 32, 0.08);
+    border-color: rgba(249, 57, 32, 0.15);
+}
+
+.semi-always-dark .premium-table th {
+    border-bottom-color: #2E2E38;
+    background-color: #16161A;
+}
+
+.semi-always-dark .premium-table tbody tr {
+    border-bottom-color: #25252D;
+}
+
+.semi-always-dark .premium-table tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.02);
+    box-shadow: 0 4px 12px rgba(0, 100, 250, 0.08);
+}
+
+.semi-always-dark .vital-box {
+    background-color: #16161A;
+    border-color: #2E2E38;
+}
+
+.semi-always-dark .device-radar-container {
+    background-color: rgba(0, 0, 0, 0.3);
+    border-color: rgba(0, 100, 250, 0.3);
+}
+
+/* -------------------- 5. 业务监管大屏 (M07) -------------------- */
+#m07-dashboard {
+    padding: 0;
+}
+
+.dashboard-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+}
+
+.kpi-card, .chart-card, .data-table-card, .device-monitor-card {
+    background-color: var(--semi-color-bg-0);
+    border: 1px solid var(--semi-color-border);
+    border-radius: var(--semi-border-radius-md);
+    padding: 16px;
+    box-shadow: var(--semi-shadow-sm);
+}
+
+.hover-up:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--semi-shadow-md);
+}
+
+.kpi-card.warning-border {
+    border-left: 3px solid var(--semi-color-danger);
+}
+
+.kpi-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.kpi-title {
+    font-size: 12px;
+    color: var(--semi-color-text-2);
+    font-weight: 600;
+}
+
+.kpi-trend {
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.trend-up {
+    color: var(--semi-color-success);
+}
+
+.trend-down {
+    color: var(--semi-color-danger);
+}
+
+.kpi-value-group {
+    display: flex;
+    align-items: baseline;
+}
+
+.kpi-val {
+    font-size: 28px;
+    font-weight: 700;
+    font-family: var(--semi-font-sans);
+}
+
+.kpi-unit {
+    font-size: 12px;
+    color: var(--semi-color-text-2);
+    margin-left: 2px;
+}
+
+.kpi-currency {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--semi-color-text-2);
+}
+
+.chart-row-1, .chart-row-2 {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 16px;
+}
+
+.c-span-8 { grid-column: span 8; }
+.c-span-4 { grid-column: span 4; }
+.c-span-7 { grid-column: span 7; }
+.c-span-5 { grid-column: span 5; }
+
+.card-title {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: var(--semi-color-text-0);
+    border-left: 2.5px solid var(--semi-color-primary);
+    padding-left: 8px;
+}
+
+.chart-wrapper {
+    height: 220px;
+    width: 100%;
+}
+
+.pie-wrapper {
+    display: flex;
+    justify-content: center;
+}
+
+/* 表格基本样式 */
+.table-scroll {
+    overflow-x: auto;
+    width: 100%;
+}
+
+.premium-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    text-align: left;
+}
+
+.premium-table th {
+    padding: 10px 12px;
+    color: var(--semi-color-text-1);
+    font-weight: 600;
+    border-bottom: 1px solid var(--semi-color-border);
+    background-color: var(--semi-color-bg-1);
+    transition: var(--semi-transition-smooth);
+}
+
+.premium-table td {
+    padding: 12px 12px;
+    color: var(--semi-color-text-0);
+    vertical-align: middle;
+}
+
+.premium-table tbody tr {
+    border-bottom: 1px solid var(--semi-color-border);
+    transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Table Hover 浮动微动效 (Float Rows) */
+.premium-table tbody tr:hover {
+    background-color: var(--semi-color-primary-light);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0, 100, 250, 0.05);
+}
+
+/* 监控雷达波扩散脉冲 */
+.device-status-content {
+    display: flex;
+    height: 180px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.device-stats-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.device-bar-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-num {
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.stat-lbl {
+    font-size: 11px;
+    color: var(--semi-color-text-2);
+}
+
+.text-green { color: var(--semi-color-success); }
+.text-gray { color: var(--semi-color-text-1); }
+.text-red { color: var(--semi-color-danger); }
+
+.device-radar-container {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 100, 250, 0.25);
+    position: relative;
+    overflow: hidden;
+    background-color: rgba(0, 0, 0, 0.03);
+}
+
+.radar-scan {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: conic-gradient(from 0deg, rgba(0, 100, 250, 0.3) 0deg, transparent 90deg);
+    border-radius: 50%;
+    animation: rotateScan 4s linear infinite;
+    z-index: 2;
+}
+
+/* 雷达向外连续扩散的声纳光圈 */
+.device-radar-container::before, .device-radar-container::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    border: 1px solid rgba(0, 100, 250, 0.25);
+    animation: radarPulse 3s infinite linear;
+    z-index: 1;
+}
+
+.device-radar-container::after {
+    animation-delay: 1.5s;
+}
+
+.radar-ping {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--semi-color-success);
+    box-shadow: 0 0 8px var(--semi-color-success);
+    z-index: 3;
+}
+
+.radar-ping.p1 { top: 25px; left: 30px; }
+.radar-ping.p2 { top: 70px; left: 80px; animation: pulseGlow 2.5s infinite; }
+
+.radar-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 4;
+}
+
+@keyframes rotateScan {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes radarPulse {
+    0% { width: 0px; height: 0px; opacity: 1; }
+    100% { width: 140px; height: 140px; opacity: 0; }
+}
+
+@keyframes pulseGlow {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; box-shadow: 0 0 10px var(--semi-color-danger); background-color: var(--semi-color-danger); }
+}
+
+/* ==========================================================================
+   6. 单栏表格容器与公共样式
+   ========================================================================== */
+.card-management-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    gap: 16px;
+}
+
+.table-view-container {
+    background-color: var(--semi-color-bg-0);
+    border: 1px solid var(--semi-color-border);
+    border-radius: var(--semi-border-radius-md);
+    box-shadow: var(--semi-shadow-sm);
+    overflow: hidden;
+}
+
+.tabs-header {
+    display: flex;
+    background-color: rgba(0, 0, 0, 0.04);
+    padding: 3px;
+    border-radius: var(--semi-border-radius-md);
+}
+
+.tab-btn {
+    border: none;
+    padding: 6px 16px;
+    background: none;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: var(--semi-border-radius-md);
+    cursor: pointer;
+    color: var(--semi-color-text-1);
+    transition: var(--semi-transition-smooth);
+}
+
+.tab-btn.active {
+    background-color: var(--semi-color-bg-0);
+    color: var(--semi-color-primary);
+    box-shadow: var(--semi-shadow-sm);
+}
+
+.search-filter-row {
+    display: flex;
+    gap: 8px;
+}
+
+/* 徽章与发光样式 */
+.badge {
+    display: inline-block;
+    padding: 2px 6px;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: var(--semi-border-radius-sm);
+}
+
+.badge-primary { background-color: var(--semi-color-primary-light); color: var(--semi-color-primary); }
+.badge-warning { background-color: #FFF3E0; color: var(--semi-color-warning); }
+.badge-danger { 
+    background-color: #FFEAE6; 
+    color: var(--semi-color-danger); 
+    box-shadow: 0 0 6px rgba(249, 57, 32, 0.15);
+}
+
+/* ==========================================================================
+   7. 调理方案维护弹窗集成 (左右编辑器布局)
+   ========================================================================== */
+.scheme-editor-layout {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 20px;
+    height: 100%;
+}
+
+.scheme-content-panel {
+    display: flex;
+    flex-direction: column;
+}
+
+.scheme-preview-panel {
+    border-left: 1px solid var(--semi-color-border);
+    padding-left: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.scheme-tabs {
+    display: flex;
+    background-color: rgba(0,0,0,0.04);
+    padding: 3px;
+    border-radius: var(--semi-border-radius-md);
+}
+
+.scheme-tab {
+    border: none;
+    background: none;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: var(--semi-border-radius-md);
+    cursor: pointer;
+    color: var(--semi-color-text-1);
+}
+
+.scheme-tab.active {
+    background-color: #fff;
+    color: var(--semi-color-primary);
+    box-shadow: var(--semi-shadow-sm);
+}
+
+/* 节点编辑器 */
+.nodes-drag-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+    max-height: 280px;
+    overflow-y: auto;
+}
+
+.drag-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background-color: var(--semi-color-bg-1);
+    border: 1px dashed var(--semi-color-border);
+    border-radius: var(--semi-border-radius-md);
+    cursor: grab;
+    transition: var(--semi-transition-smooth);
+}
+
+.drag-item:active {
+    cursor: grabbing;
+    border-color: var(--semi-color-primary);
+    box-shadow: var(--semi-shadow-md);
+}
+
+.drag-handle {
+    cursor: grab;
+    color: var(--semi-color-text-2);
+}
+
+.node-content-input {
+    flex: 1;
+}
+
+.node-delete-btn {
+    background: none;
+    border: none;
+    color: var(--semi-color-danger);
+    font-size: 16px;
+    cursor: pointer;
+}
+
+/* 📱 三维拟物手机预览框 (3D Skewed Phone Simulator) */
+.phone-mockup {
+    width: 260px;
+    height: 460px;
+    border: 8px solid #1E1E24;
+    border-radius: 28px;
+    background-color: #FFF;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12), inset 0 2px 4px rgba(255,255,255,0.1);
+}
+
+/* 玻璃高光反光覆膜层 */
+.phone-mockup::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 200%;
+    height: 100%;
+    background: linear-gradient(120deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.03) 40%, transparent 60%);
+    pointer-events: none;
+    z-index: 10;
+}
+
+.phone-screen {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background-color: #F4F5F7;
+}
+
+.phone-status-bar {
+    height: 20px;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 12px;
+    font-size: 9px;
+    color: #1f2429;
+    font-weight: 700;
+}
+
+.phone-header {
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 10px;
+    border-bottom: 1px solid #E6E8EB;
+    font-size: 12px;
+    font-weight: 700;
+    background-color: #fff;
+}
+
+.phone-content {
+    flex: 1;
+    padding: 10px;
+    overflow-y: auto;
+    scroll-behavior: smooth; /* 平滑滚动 */
+}
+
+.phone-empty {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: var(--semi-color-text-2);
+    text-align: center;
+}
+
+.phone-node-card {
+    background: #FFF;
+    border-radius: 4px;
+    padding: 8px;
+    margin-bottom: 8px;
+    box-shadow: var(--semi-shadow-sm);
+    border-left: 2px solid var(--semi-color-primary);
+    animation: phoneNodeSlide 0.25s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+}
+
+@keyframes phoneNodeSlide {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.phone-node-img {
+    width: 100%;
+    border-radius: 3px;
+    object-fit: cover;
+}
+
+.phone-node-link {
+    font-size: 10px;
+    color: var(--semi-color-primary);
+    text-decoration: underline;
+}
+
+/* ==========================================================================
+   8. 服务包 & 药食同源产品
+   ========================================================================== */
+.package-grid, .products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+.management-card {
+    background-color: var(--semi-color-bg-0);
+    border: 1px solid var(--semi-color-border);
+    border-radius: var(--semi-border-radius-md);
+    padding: 16px;
+    box-shadow: var(--semi-shadow-sm);
+    height: 260px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.card-top-info {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.m-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--semi-color-text-0);
+}
+
+.m-price {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--semi-color-primary);
+}
+
+.m-desc {
+    font-size: 11px;
+    color: var(--semi-color-text-1);
+    line-height: 1.5;
+}
+
+.m-stock-alert {
+    color: var(--semi-color-danger);
+    font-weight: bold;
+}
+
+.card-actions-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid var(--semi-color-border);
+    padding-top: 10px;
+}
+
+/* 极简 Switch 开关 */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 38px;
+    height: 20px;
+}
+
+.switch input { 
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #D6D8DB;
+    transition: .2s;
+    border-radius: 20px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 14px;
+    width: 14px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .2s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: var(--semi-color-primary);
+}
+
+input:checked + .slider:before {
+    transform: translateX(18px);
+}
+
+/* ==========================================================================
+   9. CMS内容运营与系统设置
+   ========================================================================== */
+.cms-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.cms-card {
+    background-color: var(--semi-color-bg-0);
+    border: 1px solid var(--semi-color-border);
+    border-radius: var(--semi-border-radius-md);
+    padding: 16px;
+    box-shadow: var(--semi-shadow-sm);
+    height: auto;
+}
+
+.cms-banner-item {
+    border: 1px solid var(--semi-color-border);
+    border-radius: var(--semi-border-radius-md);
+    padding: 10px;
+    margin-bottom: 10px;
+    display: flex;
+    gap: 10px;
+    background-color: var(--semi-color-bg-1);
+}
+
+.banner-img-preview {
+    width: 80px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 3px;
+}
+
+/* 系统配置 */
+.settings-card {
+    background-color: var(--semi-color-bg-0);
+    border: 1px solid var(--semi-color-border);
+    border-radius: var(--semi-border-radius-md);
+    padding: 20px;
+    box-shadow: var(--semi-shadow-sm);
+}
+
+.settings-sub-panel {
+    display: none;
+    margin-top: 16px;
+}
+
+.settings-sub-panel.active {
+    display: block;
+}
+
+.add-subaccount-row {
+    display: flex;
+    gap: 8px;
+}
+
+/* ==========================================================================
+   10. Semi UI 控件与输入框 (Forms & Inputs)
+   ========================================================================== */
+.premium-input, .premium-select, .premium-textarea {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--semi-color-border);
+    border-radius: var(--semi-border-radius-md);
+    background-color: var(--semi-color-bg-0);
+    font-size: 13px;
+    color: var(--semi-color-text-0);
+    transition: var(--semi-transition-smooth);
+}
+
+.premium-input:focus, .premium-select:focus, .premium-textarea:focus {
+    border-color: var(--semi-color-primary);
+    box-shadow: 0 0 0 3px rgba(0, 100, 250, 0.12);
+}
+
+.premium-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--semi-color-text-1);
+    margin-bottom: 4px;
+}
+
+.form-row {
+    margin-bottom: 12px;
+}
+
+.form-row-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+/* 按钮与交互浮动 */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: var(--semi-border-radius-md);
+    border: none;
+    cursor: pointer;
+    transition: var(--semi-transition-smooth);
+}
+
+.btn-primary {
+    background-color: var(--semi-color-primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: var(--semi-color-primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0, 100, 250, 0.2);
+}
+
+.btn-primary:active {
+    background-color: var(--semi-color-primary-active);
+    transform: translateY(0);
+}
+
+.btn-secondary {
+    background-color: rgba(0,0,0,0.04);
+    color: var(--semi-color-text-1);
+}
+
+.btn-secondary:hover {
+    background-color: rgba(0,0,0,0.08);
+    color: var(--semi-color-text-0);
+    transform: translateY(-1px);
+}
+
+.btn-danger {
+    background-color: var(--semi-color-danger);
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #E22B18;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(249, 57, 32, 0.2);
+}
+
+.btn-sm {
+    padding: 4px 10px;
+    font-size: 12px;
+}
+
+.btn-block {
+    width: 100%;
+}
+
+/* ==========================================================================
+   11. Semi Design 弹出模态框 (Spring Modal)
+   ========================================================================== */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(15, 15, 20, 0.5);
+    backdrop-filter: blur(0px); /* 初始为0 */
+    -webkit-backdrop-filter: blur(0px);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    transition: backdrop-filter 0.3s ease;
+}
+
+.modal.active {
+    display: flex;
+    backdrop-filter: blur(3px); /* 激活时虚化 */
+    -webkit-backdrop-filter: blur(3px);
+}
+
+.modal-dialog {
+    width: 100%;
+    max-width: 520px;
+    background-color: var(--semi-color-bg-0);
+    border: 1px solid var(--semi-color-border);
+    border-radius: var(--semi-border-radius-lg);
+    box-shadow: var(--semi-shadow-lg);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+    overflow-y: auto;
+    opacity: 0;
+    transform: scale(0.96);
+    /* 物理回弹动效 (Spring Animation) */
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.35s ease;
+}
+
+.modal.active .modal-dialog {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* 大尺寸弹窗 */
+.modal-lg .modal-dialog {
+    max-width: 880px;
+    width: 880px;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--semi-color-border);
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+}
+
+.modal-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--semi-color-text-0);
+}
+
+.modal-close {
+    font-size: 20px;
+    color: var(--semi-color-text-2);
+    cursor: pointer;
+    transition: var(--semi-transition-smooth);
+}
+
+.modal-close:hover {
+    color: var(--semi-color-text-0);
+    transform: rotate(90deg);
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 16px;
+    border-top: 1px solid var(--semi-color-border);
+    padding-top: 12px;
+}
+
+/* 医生资质证书大图 */
+.certificate-preview-group {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.cert-card {
+    border: 1px solid var(--semi-color-border);
+    border-radius: var(--semi-border-radius-md);
+    overflow: hidden;
+    cursor: zoom-in;
+    transition: var(--semi-transition-smooth);
+}
+
+.cert-card:hover {
+    transform: scale(1.02);
+    box-shadow: var(--semi-shadow-md);
+}
+
+.cert-img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+}
+
+.cert-label {
+    padding: 6px;
+    font-size: 11px;
+    background-color: var(--semi-color-bg-1);
+    text-align: center;
+    font-weight: 500;
+}
+
+/* 居民画像弹窗布局 */
+.res-portrait-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.res-vital-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+.vital-box {
+    background-color: var(--semi-color-bg-1);
+    border: 1px solid var(--semi-color-border);
+    border-radius: var(--semi-border-radius-md);
+    padding: 12px;
+    text-align: center;
+}
+
+.vital-val {
+    font-size: 18px;
+    font-weight: 700;
+    margin-top: 4px;
+}
+
+/* 常用小工具 */
+.mt-20 { margin-top: 20px; }
+.mt-10 { margin-top: 10px; }
+.col-red { color: var(--semi-color-danger); }
+.font-mono { font-family: var(--semi-font-mono); }
+.font-bold { font-weight: bold; }
+
+.bounce-anim {
+    animation: alertBounce 1s infinite alternate;
+}
+
+/* 红色高危徽章呼吸发光 */
+.res-level-tag.red {
+    animation: heartPulse 1.2s infinite alternate;
+}
+
+@keyframes heartPulse {
+    from { transform: scale(1); box-shadow: 0 0 4px var(--semi-color-danger); }
+    to { transform: scale(1.15); box-shadow: 0 0 10px var(--semi-color-danger); }
+}
+
+@keyframes alertBounce {
+    from { transform: scale(1); }
+    to { transform: scale(1.05); }
+}
+
+::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.12);
+    border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.25);
+}
+
+.semi-always-dark ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.12);
+}
+.semi-always-dark ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+/* ==========================================================================
+   12. 系统设置二级导航及分佣配置样式 (垂直子菜单)
+   ========================================================================== */
+.settings-outer-container {
+    display: flex;
+    background-color: var(--semi-color-bg-0);
+    border: 1px solid var(--semi-color-border);
+    border-radius: var(--semi-border-radius-lg);
+    box-shadow: var(--semi-shadow-md);
+    min-height: 500px;
+    width: 100%;
+}
+
+.settings-sidebar {
+    width: 200px;
+    border-right: 1px solid var(--semi-color-border);
+    padding: 16px 8px;
+    background-color: rgba(0, 0, 0, 0.01);
+}
+
+.settings-menu-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.settings-menu-item {
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--semi-color-text-1);
+    border-radius: var(--semi-border-radius-md);
+    cursor: pointer;
+    transition: var(--semi-transition-smooth);
+}
+
+.settings-menu-item:hover {
+    background-color: rgba(0, 0, 0, 0.03);
+    color: var(--semi-color-text-0);
+}
+
+.settings-menu-item.active {
+    background-color: var(--semi-color-primary-light);
+    color: var(--semi-color-primary);
+    font-weight: 600;
+}
+
+.settings-content-wrapper {
+    flex: 1;
+    padding: 24px;
+    overflow-y: auto;
+}
+
+.settings-sub-panel {
+    display: none;
+}
+
+.settings-sub-panel.active {
+    display: block;
+}
+
+.semi-always-dark .settings-sidebar {
+    background-color: rgba(255, 255, 255, 0.01);
+}
+
+.semi-always-dark .settings-menu-item:hover {
+    background-color: rgba(255, 255, 255, 0.04);
+}
+
+.semi-always-dark .settings-menu-item.active {
+    background-color: rgba(0, 100, 250, 0.15);
+    color: #3b82f6;
+}
+
+/* ==========================================================================
+   13. 莫兰迪发光圆形正式头像 (Formal Avatar)
+   ========================================================================== */
+.formal-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #FFFFFF;
+    font-size: 13px;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    transition: var(--semi-transition-smooth);
+    user-select: none;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    background-size: cover;
+}
+
+.formal-avatar:hover {
+    transform: scale(1.06);
+    box-shadow: 0 4px 10px rgba(0, 100, 250, 0.15);
+}
+
+/* 大号圆形头像 (常用于画像详情) */
+.formal-avatar-lg {
+    width: 48px;
+    height: 48px;
+    font-size: 18px;
+    font-weight: 700;
+    border: 1.5px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* ==========================================================================
+   14. 通用警告与二次确认弹窗样式 (.modal-sm / header-warning)
+   ========================================================================== */
+.modal-sm .modal-dialog {
+    max-width: 380px;
+    width: 380px;
+}
+
+.modal-header.header-warning {
+    border-bottom: none;
+}
+
+.warning-icon-wrapper {
+    font-size: 48px;
+    margin: 10px 0;
+    color: var(--semi-color-warning);
+    animation: alertBounce 1s infinite alternate;
+}
+
+/* CMS内容运营垂直大单栏结构 */
+.cms-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* 按钮微动效与警告模式 */
+.btn-danger {
+    background-color: var(--semi-color-danger);
+    color: white;
+}
+.btn-danger:hover {
+    background-color: #d72f1a;
+}
+

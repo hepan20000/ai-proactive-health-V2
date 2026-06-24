@@ -1,0 +1,14 @@
+# macOS System Files
+.DS_Store
+
+# Office Word Temporary Files
+~$*.docx
+
+# Python bytecode and cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.venv/
+venv/
+env/
