@@ -939,7 +939,7 @@ function renderDevicesModule() {
         <tr>
             <td class="font-mono" style="font-weight:600;">${r.device_imei}</td>
             <td>
-                <span class="badge" style="background-color:${r.device_online ? '#10b981' : '#6b7280'}; color:#fff; font-weight:600; padding:4px 8px; border-radius:4px;">
+                <span class="badge" style="background-color:${r.device_online ? '#1d4ed8' : '#64748b'}; color:#fff; font-weight:600; padding:4px 8px; border-radius:4px;">
                     ${r.device_online ? '● 在线' : '离线'}
                 </span>
             </td>

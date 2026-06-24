@@ -5,41 +5,43 @@
 /* -------------------- 1. Semi Design 全局代币 (Design Tokens) -------------------- */
 :root {
     /* 字体 */
-    --semi-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    --semi-font-sans: 'Noto Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    --semi-font-heading: 'Figtree', 'Noto Sans', -apple-system, BlinkMacSystemFont, sans-serif;
     --semi-font-mono: 'SF Mono', 'SFMono-Regular', Consolas, "Liberation Mono", Courier, monospace;
     
-    /* 品牌主色 (Semi Blue) */
-    --semi-color-primary: #0064FA;
-    --semi-color-primary-hover: #2985FF;
-    --semi-color-primary-active: #0052D9;
-    --semi-color-primary-disabled: #A5C8FF;
-    --semi-color-primary-light: #E8F2FF;
+    /* 品牌主色 (深靛蓝系) */
+    --semi-color-primary: #1d4ed8;            /* 靛蓝 */
+    --semi-color-primary-hover: #2563eb;      /* 鲜蓝 */
+    --semi-color-primary-active: #1e40af;     /* 深蓝 */
+    --semi-color-primary-disabled: #93c5fd;
+    --semi-color-primary-light: #eff6ff;      /* 极浅蓝背景 */
     
     /* 状态与辅助色 */
-    --semi-color-success: #00B365;
-    --semi-color-warning: #FC8800;
-    --semi-color-danger: #F93920;
+    --semi-color-success: #059669;    /* 健康翠绿 */
+    --semi-color-warning: #d97706;    /* 暖橘黄 */
+    --semi-color-danger: #dc2626;     /* 珊瑚红 */
     
-    /* 日间模式 (Bright Mode) */
+    /* 日间模式 (Bright Mode / Slate 灰蓝系) */
     --semi-color-bg-0: #FFFFFF;               /* 亮色卡片背景 */
-    --semi-color-bg-1: #F9F9FC;               /* 亮色全局底色 */
-    --semi-color-border: #E6E8EB;             /* 边框色 */
-    --semi-color-text-0: #1F2429;             /* 主文本 */
-    --semi-color-text-1: #4F5660;             /* 次文本 */
-    --semi-color-text-2: #808893;             /* 辅助/静默文本 */
+    --semi-color-bg-1: #f8fafc;               /* 亮色全局底色 (slate-50) */
+    --semi-color-bg-2: #f1f5f9;               /* 浅灰蓝背景 (slate-100) */
+    --semi-color-border: #cbd5e1;             /* 边框色 (slate-300) */
+    --semi-color-text-0: #0f172a;             /* 主文本 (slate-900) */
+    --semi-color-text-1: #334155;             /* 次文本 (slate-700) */
+    --semi-color-text-2: #64748b;             /* 辅助/静默文本 (slate-500) */
     
     /* 阴影与圆角 */
-    --semi-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.04), 0 1px 1px 0 rgba(0, 0, 0, 0.02);
-    --semi-shadow-md: 0 4px 12px 0 rgba(0, 0, 0, 0.05), 0 1px 3px 0 rgba(0, 0, 0, 0.02);
-    --semi-shadow-lg: 0 16px 36px 0 rgba(0, 0, 0, 0.1), 0 4px 12px 0 rgba(0, 0, 0, 0.05);
+    --semi-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --semi-shadow-md: 0 4px 6px rgba(15, 23, 42, 0.08);
+    --semi-shadow-lg: 0 10px 15px rgba(15, 23, 42, 0.12);
     
-    --semi-border-radius-sm: 3px;
-    --semi-border-radius-md: 6px;
-    --semi-border-radius-lg: 10px;
+    --semi-border-radius-sm: 6px;
+    --semi-border-radius-md: 8px;
+    --semi-border-radius-lg: 12px;
     
     /* 动效过渡 (贝塞尔缓动) */
-    --semi-transition-smooth: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    --semi-transition-bounce: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    --semi-transition-smooth: all 250ms ease;
+    --semi-transition-bounce: all 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 /* -------------------- 2. 全局重置与排版 -------------------- */
@@ -54,9 +56,30 @@ body {
     background-color: var(--semi-color-bg-1);
     color: var(--semi-color-text-0);
     font-size: 14px;
-    line-height: 1.5;
+    line-height: 1.6;
     overflow: hidden;
     height: 100vh;
+}
+
+h1, h2, h3, h4, h5, h6, .stat-num, .kpi-val, .system-clock, .main-header .current-bc {
+    font-family: var(--semi-font-heading);
+    letter-spacing: -0.01em;
+}
+
+/* 统一补齐所有可点击元素的光标样式 */
+button,
+.btn,
+.sidebar-menu-item,
+.settings-menu-item,
+.tab-item,
+.modal-close,
+.switch,
+.switch input,
+.cert-card,
+.kpi-card,
+.formal-avatar,
+a {
+    cursor: pointer !important;
 }
 
 /* 渐变式亮暗主题过渡切换 */
@@ -342,47 +365,69 @@ body, .sidebar, .main-header, .main-panel, .kpi-card, .chart-card, .data-table-c
 }
 
 .semi-always-dark #m07-dashboard {
-    background-color: #16161A;
+    background: radial-gradient(circle at top, #0c152d 0%, #030509 100%);
 }
 
-/* 大屏下卡片增强：科技感虚化阴影 */
+/* 大屏下卡片增强：科技感磨砂蓝光边框 */
 .semi-always-dark .kpi-card,
 .semi-always-dark .chart-card,
 .semi-always-dark .data-table-card,
 .semi-always-dark .device-monitor-card {
-    background-color: #1E1E24;
-    border-color: rgba(0, 100, 250, 0.15);
-    box-shadow: 0 4px 20px rgba(0, 100, 250, 0.06);
+    background: rgba(13, 27, 42, 0.45);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(59, 130, 246, 0.25);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    transition: var(--semi-transition-smooth);
+}
+
+.semi-always-dark .kpi-card:hover,
+.semi-always-dark .chart-card:hover,
+.semi-always-dark .data-table-card:hover,
+.semi-always-dark .device-monitor-card:hover {
+    border-color: rgba(59, 130, 246, 0.5);
+    box-shadow: 0 8px 32px 0 rgba(59, 130, 246, 0.15);
+    transform: translateY(-2px);
+}
+
+.semi-always-dark .kpi-val {
+    color: #60a5fa !important;
+    text-shadow: 0 0 12px rgba(59, 130, 246, 0.6);
+}
+
+.semi-always-dark .kpi-val.col-red {
+    color: #f87171 !important;
+    text-shadow: 0 0 12px rgba(239, 68, 68, 0.6);
 }
 
 .semi-always-dark .kpi-card.warning-border {
     border-left: 3px solid var(--semi-color-danger);
-    box-shadow: 0 4px 20px rgba(249, 57, 32, 0.08);
-    border-color: rgba(249, 57, 32, 0.15);
+    box-shadow: 0 4px 20px rgba(220, 38, 38, 0.12);
+    border-color: rgba(220, 38, 38, 0.3);
 }
 
 .semi-always-dark .premium-table th {
-    border-bottom-color: #2E2E38;
-    background-color: #16161A;
+    border-bottom-color: #1e293b;
+    background-color: #0b1329;
 }
 
 .semi-always-dark .premium-table tbody tr {
-    border-bottom-color: #25252D;
+    border-bottom-color: #1e293b;
 }
 
 .semi-always-dark .premium-table tbody tr:hover {
-    background-color: rgba(255, 255, 255, 0.02);
-    box-shadow: 0 4px 12px rgba(0, 100, 250, 0.08);
+    background-color: rgba(255, 255, 255, 0.04);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.12);
 }
 
 .semi-always-dark .vital-box {
-    background-color: #16161A;
-    border-color: #2E2E38;
+    background-color: #0c152d;
+    border-color: #1e293b;
 }
 
 .semi-always-dark .device-radar-container {
-    background-color: rgba(0, 0, 0, 0.3);
-    border-color: rgba(0, 100, 250, 0.3);
+    background-color: rgba(0, 0, 0, 0.4);
+    border-color: rgba(59, 130, 246, 0.4);
 }
 
 /* -------------------- 5. 业务监管大屏 (M07) -------------------- */
