@@ -66,29 +66,19 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function initClock() {
-    // 顶部工具栏时钟（日间模式）
     const clockEl = document.getElementById("system-clock");
-    // 大屏专属顶栏时钟与日期
-    const dsClock = document.getElementById("ds-realtime-clock");
-    const dsDate  = document.getElementById("ds-realtime-date");
-
-    function tick() {
-        const now = new Date();
-        const year  = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const date  = String(now.getDate()).padStart(2, '0');
-        const hrs   = String(now.getHours()).padStart(2, '0');
-        const mins  = String(now.getMinutes()).padStart(2, '0');
-        const secs  = String(now.getSeconds()).padStart(2, '0');
-        const day   = ['日','一','二','三','四','五','六'][now.getDay()];
-
-        if (clockEl)  clockEl.textContent = `${year}-${month}-${date} ${hrs}:${mins}:${secs}`;
-        if (dsClock)  dsClock.textContent  = `${hrs}:${mins}:${secs}`;
-        if (dsDate)   dsDate.textContent   = `${year} / ${month} / ${date}  周${day}`;
+    if (clockEl) {
+        setInterval(() => {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const date = String(now.getDate()).padStart(2, '0');
+            const hrs = String(now.getHours()).padStart(2, '0');
+            const mins = String(now.getMinutes()).padStart(2, '0');
+            const secs = String(now.getSeconds()).padStart(2, '0');
+            clockEl.textContent = `${year}-${month}-${date} ${hrs}:${mins}:${secs}`;
+        }, 1000);
     }
-
-    tick(); // 立即执行一次，避免首秒空白
-    setInterval(tick, 1000);
 }
 
 function initSidebar() {
@@ -204,46 +194,32 @@ async function loadModuleData(moduleId) {
 // API 拉取
 async function fetchDashboardData() {
     const data = await request("/dashboard");
-
-    // KPI 数字
-    const kpiResidents = document.getElementById("kpi-residents");
-    const kpiDevices   = document.getElementById("kpi-devices");
-    const kpiWarnings  = document.getElementById("kpi-warnings");
-    const kpiRevenue   = document.getElementById("kpi-revenue");
-    if (kpiResidents) kpiResidents.textContent = data.kpis.residents_total;
-    if (kpiDevices)   kpiDevices.textContent   = data.device_status.online;
-    if (kpiWarnings)  kpiWarnings.textContent  = data.kpis.active_warnings;
-    if (kpiRevenue)   kpiRevenue.textContent   = Math.floor(data.kpis.revenue_total).toLocaleString();
-
-    // 图表渲染
+    
+    // 防御性空值检查：确保大屏 KPI 元素存在再写入
+    const elResidents = document.getElementById("kpi-residents");
+    if (elResidents) elResidents.textContent = data.kpis.residents_total;
+    
+    const elDevices = document.getElementById("kpi-devices");
+    if (elDevices) elDevices.textContent = data.device_status.online;
+    
+    const elWarnings = document.getElementById("kpi-warnings");
+    if (elWarnings) elWarnings.textContent = data.kpis.active_warnings;
+    
+    const elRevenue = document.getElementById("kpi-revenue");
+    if (elRevenue) elRevenue.textContent = Math.floor(data.kpis.revenue_total).toLocaleString();
+    
     renderWarningsTrendChart(data.chart_7days);
     renderWarningsRatioChart(data.warnings_ratio);
     renderDashboardDoctors(data.doctors_performance);
-
-    // 设备统计
-    const onlineNum   = data.device_status.online   || 0;
-    const offlineNum  = data.device_status.offline  || 0;
-    const lowPowerNum = data.device_status.low_power || 0;
-    const totalDevs   = onlineNum + offlineNum;
-
-    const devOnlineEl   = document.getElementById("dev-online-num");
-    const devOfflineEl  = document.getElementById("dev-offline-num");
-    const devLowPowerEl = document.getElementById("dev-lowpower-num");
-    if (devOnlineEl)   devOnlineEl.textContent   = onlineNum;
-    if (devOfflineEl)  devOfflineEl.textContent  = offlineNum;
-    if (devLowPowerEl) devLowPowerEl.textContent = lowPowerNum;
-
-    // 设备在线率进度条
-    const rateText = document.getElementById("dev-online-rate-text");
-    const rateFill = document.getElementById("dev-online-bar-fill");
-    if (totalDevs > 0) {
-        const pct = Math.round((onlineNum / totalDevs) * 100);
-        if (rateText) rateText.textContent = `${pct}%`;
-        // 延迟渲染触发 CSS transition 动画
-        if (rateFill) setTimeout(() => { rateFill.style.width = `${pct}%`; }, 200);
-    } else {
-        if (rateText) rateText.textContent = '--';
-    }
+    
+    const elDevOnline = document.getElementById("dev-online-num");
+    if (elDevOnline) elDevOnline.textContent = data.device_status.online;
+    
+    const elDevOffline = document.getElementById("dev-offline-num");
+    if (elDevOffline) elDevOffline.textContent = data.device_status.offline;
+    
+    const elDevLowpower = document.getElementById("dev-lowpower-num");
+    if (elDevLowpower) elDevLowpower.textContent = data.device_status.low_power;
 }
 
 async function fetchDoctorsList() { state.doctors = await request("/doctors"); }
