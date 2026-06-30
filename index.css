@@ -2137,3 +2137,385 @@ input:checked + .slider:before {
     background-color: #d72f1a;
 }
 
+/* ==========================================================================
+   17. 重设计的业务监管大屏与医生入驻审批双栏控制台样式 (Design Redesign CSS)
+   ========================================================================== */
+
+/* --- A. 像素级监管大屏新增样式 --- */
+
+.screen-header {
+    height: 52px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1.5px solid var(--screen-border);
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    z-index: 10;
+}
+
+.screen-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.screen-back-btn {
+    background: none;
+    border: none;
+    color: var(--screen-accent);
+    font-size: 13.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--semi-transition-smooth);
+}
+.screen-back-btn:hover {
+    color: oklch(0.85 0.12 195);
+    text-shadow: 0 0 8px oklch(0.78 0.18 195 / 50%);
+}
+
+.screen-header-sep {
+    color: var(--screen-border);
+    font-size: 14px;
+}
+
+.screen-header-time {
+    font-family: var(--semi-font-mono);
+    font-size: 12.5px;
+    color: var(--screen-muted);
+}
+
+.screen-header-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--screen-foreground);
+    letter-spacing: 0.35em; /* 宽排字间距 */
+    text-shadow: 0 0 10px oklch(0.78 0.18 195 / 30%);
+}
+
+.screen-refresh-indicator {
+    font-size: 12px;
+    color: var(--semi-color-success);
+    font-weight: 600;
+}
+
+/* 大屏网格重构为紧致 3+3 排列 */
+.dashboard-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    height: calc(100vh - 100px);
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+}
+
+.kpi-card-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.kpi-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.kpi-sub-text {
+    font-size: 11.5px;
+    font-weight: 600;
+}
+
+.kpi-icon-box {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.bg-blue-alpha { background: oklch(0.55 0.13 195 / 10%); color: var(--screen-accent); }
+.bg-green-alpha { background: oklch(0.7 0.16 155 / 10%); color: var(--semi-color-success); }
+.bg-red-alpha { background: oklch(0.62 0.23 22 / 10%); color: var(--semi-color-danger); }
+.bg-cyan-alpha { background: oklch(0.62 0.14 230 / 10%); color: var(--semi-color-info); }
+
+.screen-icon {
+    width: 22px;
+    height: 22px;
+}
+
+.screen-row-middle,
+.screen-row-bottom {
+    display: grid;
+    grid-template-columns: 25% 50% 25%;
+    gap: 14px;
+    height: 260px;
+}
+
+.col-span-2 {
+    grid-column: span 1; /* 精细调整为 1:2:1 比例 */
+}
+
+.card-subtitle {
+    font-size: 11px;
+    color: var(--screen-muted);
+    margin-top: 1px;
+    margin-bottom: 8px;
+}
+
+.screen-legend-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 16px;
+    font-size: 11.5px;
+    margin-top: 10px;
+    border-top: 1px solid var(--screen-border);
+    padding-top: 8px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--screen-muted);
+}
+.legend-item .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 6px;
+}
+.legend-item .val {
+    font-weight: 700;
+    color: var(--screen-foreground);
+    margin-left: auto;
+}
+
+.trend-tabs {
+    display: flex;
+    gap: 10px;
+    font-size: 10.5px;
+}
+.trend-tabs span {
+    font-weight: 600;
+}
+
+.device-status-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12.5px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--screen-border);
+}
+.device-status-row .num {
+    font-weight: 700;
+}
+
+.progress-bar-bg {
+    width: 100%;
+    height: 8px;
+    background: var(--semi-color-bg-2);
+    border-radius: 4px;
+    overflow: hidden;
+}
+.progress-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+}
+.bg-purple { background-color: oklch(0.6 0.2 290); }
+
+/* 警报呼吸闪烁点 */
+.warning-blink-dot {
+    width: 8px;
+    height: 8px;
+    background-color: var(--semi-color-danger);
+    border-radius: 50%;
+    animation: alert-ping-anim 1.2s infinite;
+}
+@keyframes alert-ping-anim {
+    0% { transform: scale(0.8); box-shadow: 0 0 0 0 oklch(0.62 0.23 22 / 70%); }
+    70% { transform: scale(1.2); box-shadow: 0 0 0 6px oklch(0.62 0.23 22 / 0%); }
+    100% { transform: scale(0.8); box-shadow: 0 0 0 0 oklch(0.62 0.23 22 / 0%); }
+}
+
+/* 实时预警流卡片列表 */
+.warning-stream-card {
+    background: oklch(1 0 0 / 2%);
+    border: 1px solid var(--screen-border);
+    border-radius: var(--semi-border-radius-sm);
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    transition: var(--semi-transition-smooth);
+}
+.warning-stream-card:hover {
+    border-color: var(--screen-accent);
+    background: oklch(1 0 0 / 4%);
+}
+.warning-stream-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.warning-stream-tag {
+    font-size: 9px;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-weight: 700;
+}
+.bg-red-light { background: oklch(0.62 0.23 22 / 10%); color: var(--semi-color-danger); border: 1px solid oklch(0.62 0.23 22 / 20%); }
+.bg-yellow-light { background: oklch(0.78 0.16 75 / 10%); color: var(--semi-color-warning); border: 1px solid oklch(0.78 0.16 75 / 20%); }
+.bg-blue-light { background: oklch(0.62 0.14 230 / 10%); color: var(--semi-color-info); border: 1px solid oklch(0.62 0.14 230 / 20%); }
+
+/* 医生绩效条列表 */
+.doc-efficiency-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px 10px;
+    border-bottom: 1.5px solid var(--screen-border);
+}
+.doc-efficiency-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+}
+.doc-efficiency-top .rank {
+    font-weight: 800;
+    font-size: 13px;
+    color: var(--screen-accent);
+}
+.doc-efficiency-details {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--screen-muted);
+}
+
+/* --- B. 医生入驻审批双栏控制台样式 --- */
+
+.approval-tabs .app-tab {
+    cursor: pointer;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--semi-color-text-2);
+    padding: 4px 6px;
+    position: relative;
+    transition: var(--semi-transition-smooth);
+}
+.approval-tabs .app-tab.active {
+    color: var(--semi-color-primary);
+}
+.approval-tabs .app-tab.active::after {
+    content: "";
+    position: absolute;
+    bottom: -10px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: var(--semi-color-primary);
+    border-radius: 1px;
+}
+.approval-tabs .badge {
+    font-size: 10.5px;
+    padding: 1px 5px;
+    background: var(--semi-color-bg-2);
+    color: var(--semi-color-text-1);
+    border-radius: 10px;
+    margin-left: 2px;
+}
+.approval-tabs .app-tab.active .badge {
+    background: var(--semi-color-primary-light);
+    color: var(--semi-color-primary);
+}
+
+/* 医生圆形姓名彩头像 */
+.doctor-avatar-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 700;
+    font-size: 13px;
+    text-shadow: 0 1px 1px rgba(0,0,0,0.15);
+}
+
+/* 状态徽章 dot */
+.status-badge-dot {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 600;
+}
+.status-badge-dot.orange { color: var(--semi-color-warning); }
+.status-badge-dot.green { color: var(--semi-color-success); }
+.status-badge-dot.red { color: var(--semi-color-danger); }
+.status-badge-dot .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: currentColor;
+}
+
+/* 表格点击选中项 */
+.approval-table-row {
+    cursor: pointer;
+    transition: var(--semi-transition-smooth);
+}
+.approval-table-row:hover {
+    background-color: var(--semi-color-bg-1) !important;
+}
+
+/* 黄色资质提示条 */
+.warning-notice-bar {
+    background: oklch(0.78 0.16 75 / 8%);
+    border: 1px solid oklch(0.78 0.16 75 / 20%);
+    border-radius: var(--semi-border-radius-sm);
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    color: oklch(0.68 0.14 75);
+    font-size: 12px;
+}
+.warning-notice-bar h5 {
+    margin: 0;
+    font-weight: 700;
+    color: oklch(0.62 0.14 75);
+}
+
+/* 资质四列网格 */
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 24px;
+    font-size: 13px;
+    color: var(--semi-color-text-1);
+}
+.info-grid-label {
+    color: var(--semi-color-text-2);
+    font-size: 11.5px;
+    display: block;
+    margin-bottom: 2px;
+}
+.info-grid-val {
+    font-weight: 600;
+    color: var(--semi-color-text-0);
+}
+
+

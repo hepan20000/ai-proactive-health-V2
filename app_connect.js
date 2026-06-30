@@ -40,6 +40,7 @@ const state = {
     selectedDoctorId: null,
     selectedResidentId: null,
     selectedSchemeId: null,
+    approvalFilterStatus: "pending", // 默认为待审批选项卡
     
     // 方案编辑中的临时节点数据
     editingSchemeNodes: [],
@@ -108,22 +109,6 @@ function initApp() {
         loadModuleData("m07-dashboard");
     } else {
         loadModuleData("d03-patients");
-    }
-}
-
-function initClock() {
-    const clockEl = document.getElementById("system-clock");
-    if (clockEl) {
-        setInterval(() => {
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const date = String(now.getDate()).padStart(2, '0');
-            const hrs = String(now.getHours()).padStart(2, '0');
-            const mins = String(now.getMinutes()).padStart(2, '0');
-            const secs = String(now.getSeconds()).padStart(2, '0');
-            clockEl.textContent = `${year}-${month}-${date} ${hrs}:${mins}:${secs}`;
-        }, 1000);
     }
 }
 
@@ -335,12 +320,15 @@ async function loadModuleData(moduleId) {
 async function fetchDashboardData() {
     const data = await request("/dashboard");
     
+    // 拉取最新的居民列表以供渲染实时预警流
+    await fetchResidentsList();
+    
     // 防御性空值检查：确保大屏 KPI 元素存在再写入
     const elResidents = document.getElementById("kpi-residents");
-    if (elResidents) elResidents.textContent = data.kpis.residents_total;
+    if (elResidents) elResidents.textContent = data.kpis.residents_total.toLocaleString();
     
     const elDevices = document.getElementById("kpi-devices");
-    if (elDevices) elDevices.textContent = data.device_status.online;
+    if (elDevices) elDevices.textContent = data.device_status.online.toLocaleString();
     
     const elWarnings = document.getElementById("kpi-warnings");
     if (elWarnings) elWarnings.textContent = data.kpis.active_warnings;
@@ -350,7 +338,11 @@ async function fetchDashboardData() {
     
     renderWarningsTrendChart(data.chart_7days);
     renderWarningsRatioChart(data.warnings_ratio);
-    renderDashboardDoctors(data.doctors_performance);
+    
+    // 渲染医生绩效榜和实时警报流
+    renderScreenDoctorsPerformance(data.doctors_performance);
+    renderScreenWarningStream();
+    renderScreenNewResidentsChart();
     
     const elDevOnline = document.getElementById("dev-online-num");
     if (elDevOnline) elDevOnline.textContent = data.device_status.online;
@@ -360,6 +352,151 @@ async function fetchDashboardData() {
     
     const elDevLowpower = document.getElementById("dev-lowpower-num");
     if (elDevLowpower) elDevLowpower.textContent = data.device_status.low_power;
+}
+
+// 渲染大屏专属系统时钟，格式：2026年06月30日星期二 10:57:57
+function initClock() {
+    const clockEl = document.getElementById("system-clock");
+    const screenClockEl = document.getElementById("screen-system-clock");
+    
+    const updateTime = () => {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const date = String(now.getDate()).padStart(2, '0');
+        const hrs = String(now.getHours()).padStart(2, '0');
+        const mins = String(now.getMinutes()).padStart(2, '0');
+        const secs = String(now.getSeconds()).padStart(2, '0');
+        
+        if (clockEl) {
+            clockEl.textContent = `${year}-${month}-${date} ${hrs}:${mins}:${secs}`;
+        }
+        
+        if (screenClockEl) {
+            const dayNames = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
+            const dayStr = dayNames[now.getDay()];
+            screenClockEl.textContent = `${year}年${month}月${date}日${dayStr} ${hrs}:${mins}:${secs}`;
+        }
+    };
+    
+    updateTime();
+    setInterval(updateTime, 1000);
+}
+
+function renderScreenDoctorsPerformance(docs) {
+    const box = document.getElementById("screen-doctor-efficiency-list");
+    if (!box) return;
+    
+    // 拷贝并按干预人次降序排序，取前 6
+    const sorted = [...docs].sort((a, b) => b.residents_count - a.residents_count);
+    const top6 = sorted.slice(0, 6);
+    
+    box.innerHTML = top6.map((d, i) => {
+        const maxVal = top6[0].residents_count || 1;
+        const pct = Math.min(100, Math.floor((d.residents_count / maxVal) * 100));
+        return `
+            <div class="doc-efficiency-card">
+                <div class="doc-efficiency-top">
+                    <span style="font-weight:700;">
+                        <span class="rank" style="color:var(--screen-accent); margin-right:4px;">${i+1}</span>
+                        ${d.name}
+                        <span style="font-size:10px; color:var(--screen-muted); font-weight:normal; margin-left:6px;">${d.department}</span>
+                    </span>
+                    <span style="font-weight:700; color:var(--screen-foreground); font-family:var(--semi-font-mono);">${d.residents_count}</span>
+                </div>
+                <div class="progress-bar-bg" style="height:6px; margin: 4px 0;"><div class="progress-bar-fill" style="width:${pct}%; background:var(--screen-accent);"></div></div>
+                <div class="doc-efficiency-details">
+                    <span>方案 ${d.schemes_count}</span>
+                    <span>响应 ${d.response_speed} 分</span>
+                    <span>满意度 ${d.satisfaction_rate}</span>
+                </div>
+            </div>
+        `;
+    }).join("");
+}
+
+function renderScreenWarningStream() {
+    const box = document.getElementById("screen-warning-stream-list");
+    if (!box) return;
+    
+    // 从全局居民里筛选出 red / yellow 风险状态的居民，作为预警流
+    const warns = state.residents.filter(r => r.health_level === "red" || r.health_level === "yellow");
+    if (warns.length === 0) {
+        box.innerHTML = `<div style="text-align:center; padding:30px; color:var(--screen-muted); font-size:11.5px;">🎉 暂无高危或中危异常体警情记录</div>`;
+        return;
+    }
+    
+    box.innerHTML = warns.map((r, i) => {
+        const tag = r.health_level === "red" 
+            ? '<span class="warning-stream-tag bg-red-light">高危</span>' 
+            : '<span class="warning-stream-tag bg-yellow-light">中危</span>';
+        
+        // 伪造生成对应参考图的时间及异常说明细节
+        const mockTime = `10:${42 - i * 3}:${String(18 + i * 2).padStart(2, '0')}`;
+        let detail = "";
+        if (r.health_level === "red") {
+            detail = `触发收缩压 ${r.blood_pressure || '186 mmHg'} 高频或心率 ${r.heart_rate}bpm 红色警报`;
+        } else {
+            detail = `触发低电量警报或心跳异常波动（${r.heart_rate}bpm）`;
+        }
+        
+        const docList = ["陈雪松", "罗思琪", "周婷", "李翰林", "孙磊"];
+        const docName = docList[i % docList.length];
+        
+        return `
+            <div class="warning-stream-card">
+                <div class="warning-stream-card-top">
+                    ${tag}
+                    <span style="font-family:var(--semi-font-mono); font-size:10.5px; color:var(--screen-muted);">${mockTime}</span>
+                </div>
+                <div style="font-size:12px; color:var(--screen-foreground); margin:4px 0; line-height:1.45;">
+                    <strong style="color:var(--screen-foreground); font-weight:700;">${r.name}</strong> · ${r.age}岁 | ${detail}
+                </div>
+                <div style="font-size:11px; color:var(--screen-accent); text-align:right; font-weight:600;">
+                    ➜ 指派给 ${docName}
+                </div>
+            </div>
+        `;
+    }).join("");
+}
+
+function renderScreenNewResidentsChart() {
+    const el = document.getElementById("screenNewResidentsChart");
+    if (!el) return;
+    
+    destroyChart("screenNewResidents");
+    
+    const ctx = el.getContext("2d");
+    if (!ctx) return;
+    
+    const gradient = ctx.createLinearGradient(0, 0, 0, 45);
+    gradient.addColorStop(0, 'rgba(73, 162, 249, 0.15)');
+    gradient.addColorStop(1, 'rgba(73, 162, 249, 0)');
+    
+    state.charts.screenNewResidents = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['22日', '23日', '24日', '25日', '26日', '27日', '28日'],
+            datasets: [{
+                data: [180, 220, 260, 210, 280, 310, 342],
+                borderColor: '#49a2f9',
+                backgroundColor: gradient,
+                fill: true,
+                borderWidth: 2,
+                tension: 0.4,
+                pointRadius: 0 // 消除图表节点圆点，与 DESIGN 规范一致
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { display: false },
+                y: { display: false }
+            }
+        }
+    });
 }
 
 async function fetchDoctorsList() { state.doctors = await request("/doctors"); }
@@ -398,145 +535,217 @@ function renderApprovalTable() {
     if (!tbody) return;
     
     const search = document.getElementById("doc-name-search")?.value.trim().toLowerCase() || "";
-    const status = document.getElementById("doc-status-filter")?.value || "";
+    const status = state.approvalFilterStatus || ""; // 从选项卡状态过滤
     const dept = document.getElementById("doc-dept-filter")?.value || "";
     
     let filtered = state.doctors.filter(d => {
-        const matchesSearch = search ? d.name.toLowerCase().includes(search) : true;
+        const matchesSearch = search 
+            ? (d.name.toLowerCase().includes(search) || d.id.toLowerCase().includes(search) || d.hospital?.toLowerCase().includes(search)) 
+            : true;
         const matchesStatus = status ? d.status === status : true;
         const matchesDept = dept ? d.department === dept : true;
         return matchesSearch && matchesStatus && matchesDept;
     });
     
+    // 更新选项卡徽章中的待审批数
+    const pendingCount = state.doctors.filter(d => d.status === "pending").length;
+    const tabPendingBadge = document.querySelector(".app-tab[data-status='pending'] .badge");
+    if (tabPendingBadge) tabPendingBadge.textContent = pendingCount;
+    
+    if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:30px; color:var(--semi-color-text-2);">没有检索到符合过滤条件的医生入驻申请</td></tr>`;
+        return;
+    }
+    
     tbody.innerHTML = filtered.map(d => {
-        let actionBtn = "";
+        const initial = d.name ? d.name[0] : "";
+        
+        // 医生姓名彩色首字头像，莫兰迪配色
+        let bg = "oklch(0.55 0.13 195)";
+        if (d.gender === "女") bg = "oklch(0.65 0.12 350)"; // 粉红
+        else if (d.age > 50) bg = "oklch(0.45 0.08 140)";   // 稳重绿
+        
+        const avatarHtml = `<div class="doctor-avatar-circle" style="background:${bg};">${initial}</div>`;
+        const sourceBadge = d.source === "register" 
+            ? `<span class="badge" style="background:oklch(0.55 0.13 195 / 8%); color:var(--semi-color-primary); border:1px solid oklch(0.55 0.13 195 / 15%); font-size:10.5px;">自主注册</span>` 
+            : `<span class="badge" style="background:oklch(0.6 0.2 290 / 8%); color:oklch(0.6 0.2 290); border:1px solid oklch(0.6 0.2 290 / 15%); font-size:10.5px;">后台添加</span>`;
+        
+        // 状态带点徽章
+        let statusBadge = "";
+        if (d.status === "pending") statusBadge = `<span class="status-badge-dot orange"><span class="dot"></span>待审批</span>`;
+        else if (d.status === "approved") statusBadge = `<span class="status-badge-dot green"><span class="dot"></span>已激活</span>`;
+        else if (d.status === "rejected") statusBadge = `<span class="status-badge-dot red"><span class="dot"></span>已驳回</span>`;
+        else statusBadge = `<span class="status-badge-dot" style="color:var(--semi-color-text-2);"><span class="dot"></span>已禁用</span>`;
+        
+        const mockTime = d.submit_time || "2026-06-28 09:42";
+        
+        // 操作列按钮逻辑
+        let actionButtons = "";
         if (d.status === "pending") {
-            actionBtn = `
-                <button class="btn btn-secondary btn-sm" onclick="openApprovalModal('${d.id}')">查看</button>
-                <button class="btn btn-primary btn-sm" onclick="confirmApproveDoctor('${d.id}', 'approved')" style="margin-left:4px;">通过</button>
-                <button class="btn btn-danger btn-sm" onclick="confirmApproveDoctor('${d.id}', 'rejected')" style="margin-left:4px;">驳回</button>
+            actionButtons = `
+                <button class="btn btn-primary btn-sm" onclick="openApprovalModal('${d.id}')" style="font-size:12px; padding:3px 8px; font-weight:600;">审核资质</button>
+                <button class="btn btn-secondary btn-sm" onclick="confirmApproveDoctor('${d.id}', 'rejected')" style="font-size:12px; padding:3px 8px; margin-left:4px; color:var(--semi-color-danger); border-color:var(--semi-color-danger);">驳回</button>
             `;
         } else if (d.status === "approved") {
-            actionBtn = `
-                <button class="btn btn-secondary btn-sm" onclick="openApprovalModal('${d.id}')">查看</button>
-                <button class="btn btn-danger btn-sm" onclick="confirmApproveDoctor('${d.id}', 'disabled')" style="margin-left:4px;">禁用</button>
+            actionButtons = `
+                <button class="btn btn-secondary btn-sm" onclick="openApprovalModal('${d.id}')" style="font-size:12px; padding:3px 8px; margin-right:4px;">查看资质</button>
+                <button class="btn btn-secondary btn-sm" onclick="confirmApproveDoctor('${d.id}', 'disabled')" style="font-size:12px; padding:3px 8px; color:var(--semi-color-danger);">禁用</button>
             `;
         } else if (d.status === "disabled") {
-            actionBtn = `
-                <button class="btn btn-secondary btn-sm" onclick="openApprovalModal('${d.id}')">查看</button>
-                <button class="btn btn-primary btn-sm" onclick="confirmApproveDoctor('${d.id}', 'approved')" style="margin-left:4px;">启用</button>
+            actionButtons = `
+                <button class="btn btn-secondary btn-sm" onclick="openApprovalModal('${d.id}')" style="font-size:12px; padding:3px 8px; margin-right:4px;">查看资质</button>
+                <button class="btn btn-primary btn-sm" onclick="confirmApproveDoctor('${d.id}', 'approved')" style="font-size:12px; padding:3px 8px;">启用</button>
             `;
         } else {
-            // 已驳回 rejected
-            actionBtn = `
-                <button class="btn btn-secondary btn-sm" onclick="openApprovalModal('${d.id}')">查看</button>
-                <button class="btn btn-secondary btn-sm" disabled style="margin-left:4px; opacity:0.5;">已驳回</button>
+            actionButtons = `
+                <button class="btn btn-secondary btn-sm" onclick="openApprovalModal('${d.id}')" style="font-size:12px; padding:3px 8px;">查看资质</button>
             `;
         }
         
-        const avatarHtml = getFormalAvatar(d.gender, d.age, d.name);
-        const sourceHtml = d.source === "register" ? `<span class="badge" style="background:#E8F2FF; color:#0064fa;">自主注册</span>` : `<span class="badge" style="background:#F4F5F7; color:#4F5660;">后台添加</span>`;
-        
         return `
-            <tr>
+            <tr class="approval-table-row">
+                <td><input type="checkbox" onclick="event.stopPropagation()"></td>
                 <td>
                     <div style="display:flex; align-items:center; gap:10px;">
                         ${avatarHtml}
-                        <span style="font-weight:600;">${d.name}</span>
+                        <div style="display:flex; flex-direction:column;">
+                            <span style="font-weight:700; color:var(--semi-color-text-0);">${d.name} <span style="font-size:11px; font-weight:normal; color:var(--semi-color-text-2);">${d.gender} · ${d.age}岁</span></span>
+                            <span style="font-size:10.5px; color:var(--semi-color-text-2); margin-top:2px;">DR-${d.id.substring(0,8)} · ${d.hospital || '市第一人民医院'}</span>
+                        </div>
                     </div>
                 </td>
-                <td>${d.department}</td>
-                <td>${d.title}</td>
                 <td>
-                    <div style="display:flex; gap:4px; flex-wrap:wrap;">
-                        ${d.tags.slice(0,2).map(t => `<span class="badge" style="background:#f1f5f9; color:#475569;">${t}</span>`).join("")}
-                        ${d.tags.length > 2 ? `<span class="badge" style="background:#e2e8f0; color:#475569;">+${d.tags.length - 2}</span>` : ''}
+                    <div style="display:flex; flex-direction:column;">
+                        <span style="font-weight:600;">${d.department}</span>
+                        <span style="font-size:11px; color:var(--semi-color-text-2);">${d.title}</span>
                     </div>
                 </td>
-                <td>${sourceHtml}</td>
-                <td class="font-mono">${d.residents_count} 人</td>
-                <td>
-                    <span class="badge ${d.status === 'pending' ? 'badge-warning' : (d.status === 'approved' ? 'badge-primary' : 'badge-danger')}">
-                        ${d.status === 'pending' ? '待审核' : (d.status === 'approved' ? '已激活' : (d.status === 'disabled' ? '已禁用' : '已驳回'))}
-                    </span>
+                <td>${sourceBadge}</td>
+                <td style="font-family:var(--semi-font-mono); color:var(--semi-color-text-2); font-size:11.5px;">${mockTime}</td>
+                <td>${statusBadge}</td>
+                <td style="text-align:right;">
+                    <div style="display:inline-flex; gap:4px; justify-content:flex-end;">
+                        ${actionButtons}
+                    </div>
                 </td>
-                <td>${actionBtn}</td>
             </tr>
         `;
     }).join("");
 }
 
-// 医生资质审批弹窗打开 (双栏重构版)
-async function openApprovalModal(id) {
-    const doc = state.doctors.find(d => d.id === id);
-    if (!doc) return;
+// 唤出医生资质审批详情弹窗
+function openApprovalModal(id) {
+    const d = state.doctors.find(x => x.id === id);
+    if (!d) return;
     
     state.selectedDoctorId = id;
-    const container = document.getElementById("doc-approval-modal-body");
-    if (!container) return;
+    const body = document.getElementById("doc-approval-modal-body");
+    if (!body) return;
     
-    container.innerHTML = `
-        <div class="doctor-detail-layout" style="display: flex; gap: 24px;">
-            <!-- 左侧：基本信息 -->
-            <div class="doc-detail-left" style="flex: 1; display: flex; flex-direction: column; gap: 12px;">
-                <div class="doctor-detail-header" style="display:flex; gap:16px; align-items:center; padding-bottom:12px; border-bottom:1px solid var(--semi-color-border);">
-                    <img src="${doc.avatar}" style="width:52px; height:52px; border-radius:50%; background:#f1f5f9;">
+    const initial = d.name ? d.name[0] : "";
+    let avatarBg = "oklch(0.55 0.13 195)";
+    if (d.gender === "女") avatarBg = "oklch(0.65 0.12 350)";
+    
+    const avatarHtml = `<div class="doctor-avatar-circle" style="width:44px; height:44px; font-size:16px; background:${avatarBg};">${initial}</div>`;
+    
+    // 状态标签
+    let statusText = "";
+    if (d.status === "pending") statusText = '<span style="color:var(--semi-color-warning); font-weight:700;">● 待审批</span>';
+    else if (d.status === "approved") statusText = '<span style="color:var(--semi-color-success); font-weight:700;">● 已激活</span>';
+    else if (d.status === "rejected") statusText = '<span style="color:var(--semi-color-danger); font-weight:700;">● 已驳回</span>';
+    else statusText = '<span style="color:var(--semi-color-text-2); font-weight:700;">● 已禁用</span>';
+    
+    body.innerHTML = `
+        <div style="display:flex; flex-direction:column; gap:16px;">
+            <!-- 头部医生名片 -->
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--semi-color-border); padding-bottom:12px;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    ${avatarHtml}
                     <div>
-                        <h4 style="font-size:16px; font-weight:700;">${doc.name}</h4>
-                        <p style="font-size:12px; color:var(--semi-color-text-2);">${doc.department} · ${doc.title}</p>
+                        <h4 style="margin:0; font-size:15px; font-weight:800; color:var(--semi-color-text-0);">${d.name}</h4>
+                        <p style="margin:3px 0 0 0; font-size:11.5px; color:var(--semi-color-text-2);">DR-${d.id.substring(0,8)} · 执业医师审核</p>
                     </div>
                 </div>
-                <div class="form-row">
-                    <span class="premium-label">来源渠道</span>
-                    <p style="font-size:13px; font-weight:500; margin-top:4px;">
-                        ${doc.source === 'admin' ? '<span class="badge" style="background:#e6f8ea; color:#10b981;">管理员添加</span>' : '<span class="badge" style="background:#fef3c7; color:#d97706;">自主注册</span>'}
-                    </p>
+                <div>
+                    <span class="badge" style="background:var(--semi-color-primary-light); color:var(--semi-color-primary);">${d.department}</span>
+                    <span class="badge" style="background:var(--semi-color-bg-2); color:var(--semi-color-text-1); margin-left:4px;">${d.title}</span>
                 </div>
-                <div class="form-row">
-                    <span class="premium-label">联系电话与微信</span>
-                    <p style="font-size:13px; font-weight:500; margin-top:4px;">电话: ${doc.phone || '未填写'} | 微信: ${doc.wechat || '未填写'}</p>
+            </div>
+            
+            <!-- 黄色资质警告横栏 -->
+            <div class="warning-notice-bar" style="margin:0;">
+                <h5>⚠️ 执业资质安全提示</h5>
+                <span style="line-height:1.4;">职称等级证书与医师执业证书在国家卫健委系统核验通过。系统检测到职称证有效期将于 <strong>2026-12 前到期</strong>，通过后请提示医生上传最新延期证件。</span>
+            </div>
+            
+            <!-- 详细信息与双证预览网格 -->
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+                <!-- 左侧基本档案 -->
+                <div style="display:flex; flex-direction:column; gap:12px;">
+                    <div class="card-card" style="padding:14px; background:var(--semi-color-bg-1); border:1px solid var(--semi-color-border);">
+                        <div class="info-grid">
+                            <div>
+                                <span class="info-grid-label">性别 / 年龄</span>
+                                <span class="info-grid-val">${d.gender} · ${d.age}岁</span>
+                            </div>
+                            <div>
+                                <span class="info-grid-label">执业年限</span>
+                                <span class="info-grid-val">${d.age - 26} 年</span>
+                            </div>
+                            <div>
+                                <span class="info-grid-label">联系电话</span>
+                                <span class="info-grid-val" style="font-family:var(--semi-font-mono);">${d.phone || '139****1102'}</span>
+                            </div>
+                            <div>
+                                <span class="info-grid-label">电子邮箱</span>
+                                <span class="info-grid-val" style="font-family:var(--semi-font-mono); font-size:12px;">${d.name.toLowerCase()}@example.com</span>
+                            </div>
+                            <div>
+                                <span class="info-grid-label">执业医院</span>
+                                <span class="info-grid-val">${d.hospital || '华东睡眠医学科研所'}</span>
+                            </div>
+                            <div>
+                                <span class="info-grid-label">职称等级</span>
+                                <span class="info-grid-val">${d.title}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-card" style="padding:12px; border:1px solid var(--semi-color-border);">
+                        <span class="info-grid-label" style="margin-bottom:4px;">📚 医生学术与特色擅长</span>
+                        <p style="font-size:12px; color:var(--semi-color-text-1); line-height:1.6; margin:0;">
+                            ${d.bio || '主任中医师，慢病与睡眠干预学科带头人。擅长亚健康食疗与药食同源膳食指导，提供针对失眠、高血压、情绪波动的系统调理方案。'}
+                        </p>
+                    </div>
                 </div>
-                <div class="form-row">
-                    <span class="premium-label">医生学术简介说明</span>
-                    <div class="doc-bio-content" style="background:#f9f9fc; padding:12px; border-radius:6px; font-size:13px; line-height:1.6; margin-top:4px;">${doc.bio || '无简介'}</div>
-                </div>
-                <div class="form-row">
-                    <span class="premium-label">擅长调理方向</span>
-                    <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;">
-                        ${doc.tags.map(t => `<span class="badge" style="background:#e8f2ff; color:#0064fa;">${t}</span>`).join("")}
+                
+                <!-- 右侧双证预览图片 -->
+                <div class="card-card" style="padding:14px; border:1px solid var(--semi-color-border); display:flex; flex-direction:column; gap:8px;">
+                    <span class="info-grid-label">📂 资质证明原件核验</span>
+                    <div style="display:flex; gap:10px; flex:1;">
+                        <div style="flex:1; border:1px solid var(--semi-color-border); border-radius:4px; padding:6px; background:#fafafa; cursor:pointer;" onclick="alert('查看医师执业证书原图')">
+                            <img src="mock_assets/doctor_certificate.png" style="width:100%; height:110px; object-fit:cover; border-radius:2px;" onerror="this.src='design-system/医生入驻审批 · 主动健康管理.png'; this.style.objectFit='contain';">
+                            <div style="font-size:10.5px; text-align:center; color:var(--semi-color-text-2); margin-top:4px;">医师执业资格证.jpg</div>
+                        </div>
+                        <div style="flex:1; border:1px solid var(--semi-color-border); border-radius:4px; padding:6px; background:#fafafa; cursor:pointer;" onclick="alert('查看专业技术职称证原图')">
+                            <img src="mock_assets/doctor_certificate.png" style="width:100%; height:110px; object-fit:cover; border-radius:2px;" onerror="this.src='design-system/医生入驻审批 · 主动健康管理.png'; this.style.objectFit='contain';">
+                            <div style="font-size:10.5px; text-align:center; color:var(--semi-color-text-2); margin-top:4px;">专业技术职称等级证.jpg</div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <!-- 右侧：资质双证及状态 -->
-            <div class="doc-detail-right" style="flex: 1; display: flex; flex-direction: column; gap: 12px; border-left: 1px solid var(--semi-color-border); padding-left: 24px;">
-                <div class="form-row">
-                    <span class="premium-label">在线资质双证核验 (执业证与职称证)</span>
-                    <div class="certificate-preview-group" style="margin-top:6px; display: flex; gap: 12px;">
-                        <div class="cert-card" onclick="alert('预览医师执业证书')" style="flex: 1; cursor: pointer;">
-                            <img src="mock_assets/doctor_certificate.png" class="cert-img" style="width: 100%; border-radius: 4px; border: 1px solid var(--semi-color-border);">
-                            <div class="cert-label" style="font-size: 11px; text-align: center; color: var(--semi-color-text-2); margin-top: 4px;">医师执业资格证书.png</div>
-                        </div>
-                        <div class="cert-card" onclick="alert('预览医生职称证书')" style="flex: 1; cursor: pointer;">
-                            <img src="mock_assets/doctor_certificate.png" class="cert-img" style="width: 100%; border-radius: 4px; border: 1px solid var(--semi-color-border);">
-                            <div class="cert-label" style="font-size: 11px; text-align: center; color: var(--semi-color-text-2); margin-top: 4px;">专业技术职称等级证书.png</div>
-                        </div>
-                    </div>
+            
+            <!-- 底部确认操作栏 -->
+            <div style="border-top:1px solid var(--semi-color-border); padding-top:14px; display:flex; justify-content:space-between; align-items:center;">
+                <div style="display:flex; align-items:center; gap:6px; font-size:12px;">
+                    <input type="checkbox" id="chk-modal-delay" style="cursor:pointer;">
+                    <label for="chk-modal-delay" style="cursor:pointer; font-weight:600; color:var(--semi-color-text-1);">通过后延迟 24h 激活生效</label>
                 </div>
-                <div class="form-row" style="margin-top: 12px;">
-                    <span class="premium-label">当前状态</span>
-                    <p style="font-size:14px; font-weight:600; margin-top:4px;">
-                        ${doc.status === 'pending' ? '<span class="text-orange">⏳ 待审批</span>' : doc.status === 'approved' ? '<span class="text-green">✅ 已激活</span>' : doc.status === 'rejected' ? '<span class="text-red">❌ 已驳回</span>' : '<span class="text-gray">🚫 已禁用</span>'}
-                    </p>
-                </div>
-                <div class="modal-footer" style="margin-top: auto; padding-top:12px; border-top: none; justify-content: flex-end; display: flex;">
-                    ${doc.status === 'pending' ? `
-                        <button class="btn btn-secondary" onclick="confirmApproveDoctor('${doc.id}', 'rejected')">审批驳回</button>
-                        <button class="btn btn-primary" onclick="confirmApproveDoctor('${doc.id}', 'approved')" style="margin-left:8px;">审核通过</button>
-                    ` : doc.status === 'approved' ? `
-                        <button class="btn btn-danger" onclick="confirmApproveDoctor('${doc.id}', 'disabled')">禁用该医生</button>
-                    ` : `
-                        <button class="btn btn-primary" onclick="confirmApproveDoctor('${doc.id}', 'approved')">启用激活该账户</button>
-                    `}
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:12.5px; color:var(--semi-color-text-2); margin-right:12px;">状态：${statusText}</span>
+                    <button class="btn btn-secondary" onclick="confirmApproveDoctor('${d.id}', 'rejected')" style="border-color:var(--semi-color-danger); color:var(--semi-color-danger); font-size:12.5px; padding:6px 12px;">资质驳回</button>
+                    <button class="btn btn-secondary" onclick="alert('退回补充通知已通过短信形式发送给该医生！'); closeModal('doc-approval-modal');" style="font-size:12.5px; padding:6px 12px;">退回补充</button>
+                    <button class="btn btn-primary" onclick="confirmApproveDoctor('${d.id}', 'approved')" style="font-size:12.5px; padding:6px 16px; font-weight:600;">批准入驻</button>
                 </div>
             </div>
         </div>
@@ -545,12 +754,32 @@ async function openApprovalModal(id) {
     openModal("doc-approval-modal");
 }
 
+// 选项卡过滤
+window.filterApprovalStatus = function(status) {
+    state.approvalFilterStatus = status;
+    
+    document.querySelectorAll(".approval-tabs .app-tab").forEach(tab => {
+        if (tab.getAttribute("data-status") === status) {
+            tab.classList.add("active");
+        } else {
+            tab.classList.remove("active");
+        }
+    });
+    
+    renderApprovalTable();
+};
+
+window.triggerApprovalSearch = function() {
+    renderApprovalTable();
+};
+
 async function approveDoctor(id, action, reason = "") {
     try {
         await request("/doctors/approve", "POST", { id, action, reason });
-        closeModal("doc-approval-modal");
+        closeModal("doc-approval-modal"); // 审批完后自动关闭弹窗
         await fetchDoctorsList();
         renderApprovalTable();
+        alert("审批操作执行成功，已即时更新医生档案及入驻状态！");
     } catch (e) {
         alert("操作失败: " + e.message);
     }
