@@ -5,7 +5,7 @@ import urllib.parse
 import os
 import datetime
 
-PORT = 8080
+PORT = 8888
 DIRECTORY = os.path.dirname(os.path.abspath(__file__))
 os.chdir(DIRECTORY)
 
