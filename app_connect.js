@@ -1879,7 +1879,7 @@ function destroyChart(name) {
     }
 }
 
-// 大屏趋势图
+// 大屏趋势图 (对齐官方 OKLCH feedback 与 charts 色系)
 function renderWarningsTrendChart(data) {
     const el = document.getElementById("warningsTrendChart");
     if (!el) return;
@@ -1897,8 +1897,8 @@ function renderWarningsTrendChart(data) {
                 {
                     label: '脑血管风险警情',
                     data: data.cardio,
-                    borderColor: '#F93920',
-                    backgroundColor: 'rgba(249, 57, 32, 0.04)',
+                    borderColor: '#ef4444', // Danger 绯红 oklch(0.62 0.23 22)
+                    backgroundColor: 'rgba(239, 68, 68, 0.04)',
                     borderWidth: 2,
                     tension: 0.35,
                     fill: true
@@ -1906,8 +1906,8 @@ function renderWarningsTrendChart(data) {
                 {
                     label: '睡眠暂停预警',
                     data: data.sleep,
-                    borderColor: '#00B365',
-                    backgroundColor: 'rgba(0, 179, 101, 0.04)',
+                    borderColor: '#49a2f9', // Accent 冰蓝 oklch(0.78 0.18 195)
+                    backgroundColor: 'rgba(73, 162, 249, 0.04)',
                     borderWidth: 2,
                     tension: 0.35,
                     fill: true
@@ -1915,8 +1915,8 @@ function renderWarningsTrendChart(data) {
                 {
                     label: '压力负荷偏高',
                     data: data.pressure,
-                    borderColor: '#FC8800',
-                    backgroundColor: 'rgba(252, 136, 0, 0.04)',
+                    borderColor: '#b180f9', // Chart-5 紫罗兰 oklch(0.6 0.2 290)
+                    backgroundColor: 'rgba(177, 128, 249, 0.04)',
                     borderWidth: 2,
                     tension: 0.35,
                     fill: true
@@ -1927,11 +1927,11 @@ function renderWarningsTrendChart(data) {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { labels: { color: '#94A3B8', font: { size: 11, family: 'Inter, sans-serif' } } }
+                legend: { labels: { color: '#94a3b8', font: { size: 11, family: 'Inter, sans-serif' } } }
             },
             scales: {
-                x: { grid: { color: 'rgba(255,255,255,0.02)' }, ticks: { color: '#64748B', font: { size: 10 } } },
-                y: { grid: { color: 'rgba(255,255,255,0.02)' }, ticks: { color: '#64748B', font: { size: 10 } } }
+                x: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#7204220', font: { size: 10 } } },
+                y: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#7204220', font: { size: 10 } } }
             }
         }
     });
@@ -1953,8 +1953,14 @@ function renderWarningsRatioChart(ratio) {
             labels: ['脑血管', '重度睡眠', '压力负荷'],
             datasets: [{
                 data: [ratio.cardio, ratio.sleep, ratio.pressure],
-                backgroundColor: ['#F93920', '#00B365', '#FC8800'],
-                borderWidth: 0,
+                backgroundColor: [
+                    '#ef4444', // 脑血管 - Danger 绯红
+                    '#49a2f9', // 重度睡眠 - Accent 冰蓝
+                    '#b180f9'  // 压力负荷 - 紫罗兰
+                ],
+                // 物理切缝感：用大屏 panel 背景色描边，并增加边框间隙
+                borderWidth: 3,
+                borderColor: '#1a2236',
                 hoverOffset: 3
             }]
         },
@@ -1963,13 +1969,13 @@ function renderWarningsRatioChart(ratio) {
             maintainAspectRatio: false,
             cutout: '72%',
             plugins: {
-                legend: { position: 'bottom', labels: { color: '#94A3B8', font: { size: 10 } } }
+                legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 10 } } }
             }
         }
     });
 }
 
-// 居民详情 30 天体征图 (Pro Max 高光渐变填充)
+// 居民详情 30 天体征图 (亮色 B端后台对齐)
 function renderResidentTrendChart(trends) {
     const el = document.getElementById("residentTrendChart");
     if (!el) return;
@@ -1979,15 +1985,15 @@ function renderResidentTrendChart(trends) {
     const ctx = el.getContext("2d");
     if (!ctx) return;
     
-    // 创建心率渐变填充区
+    // 创建冰蓝渐变填充区
     const hrGradient = ctx.createLinearGradient(0, 0, 0, 150);
-    hrGradient.addColorStop(0, 'rgba(0, 100, 250, 0.15)');
-    hrGradient.addColorStop(1, 'rgba(0, 100, 250, 0)');
+    hrGradient.addColorStop(0, 'rgba(73, 162, 249, 0.15)');
+    hrGradient.addColorStop(1, 'rgba(73, 162, 249, 0)');
     
-    // 创建血氧渐变填充区
+    // 创建绯红渐变填充区
     const oxGradient = ctx.createLinearGradient(0, 0, 0, 150);
-    oxGradient.addColorStop(0, 'rgba(249, 57, 32, 0.15)');
-    oxGradient.addColorStop(1, 'rgba(249, 57, 32, 0)');
+    oxGradient.addColorStop(0, 'rgba(239, 68, 68, 0.15)');
+    oxGradient.addColorStop(1, 'rgba(239, 68, 68, 0)');
     
     state.charts.residentTrend = new Chart(ctx, {
         type: 'line',
@@ -1997,7 +2003,7 @@ function renderResidentTrendChart(trends) {
                 {
                     label: '实时心率波动(bpm)',
                     data: trends.heart_rate,
-                    borderColor: '#0064FA',
+                    borderColor: '#49a2f9',
                     backgroundColor: hrGradient,
                     fill: true,
                     borderWidth: 2,
@@ -2007,7 +2013,7 @@ function renderResidentTrendChart(trends) {
                 {
                     label: '血氧饱和度(%)',
                     data: trends.blood_oxygen,
-                    borderColor: '#F93920',
+                    borderColor: '#ef4444',
                     backgroundColor: oxGradient,
                     fill: true,
                     borderWidth: 2,
@@ -2020,12 +2026,12 @@ function renderResidentTrendChart(trends) {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { labels: { color: '#4F5660', font: { size: 10 } } }
+                legend: { labels: { color: '#64748b', font: { size: 10 } } }
             },
             scales: {
-                x: { grid: { color: '#E6E8EB' }, ticks: { color: '#808893', font: { size: 9 } } },
-                y: { position: 'left', grid: { color: '#E6E8EB' }, ticks: { color: '#808893', font: { size: 9 } } },
-                y1: { position: 'right', grid: { drawOnChartArea: false }, ticks: { color: '#808893', font: { size: 9 } } }
+                x: { grid: { color: 'rgba(148, 163, 184, 0.12)' }, ticks: { color: '#64748b', font: { size: 9 } } },
+                y: { position: 'left', grid: { color: 'rgba(148, 163, 184, 0.12)' }, ticks: { color: '#64748b', font: { size: 9 } } },
+                y1: { position: 'right', grid: { drawOnChartArea: false }, ticks: { color: '#64748b', font: { size: 9 } } }
             }
         }
     });

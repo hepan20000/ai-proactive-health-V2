@@ -2,44 +2,48 @@
    主动健康管理机构端 - Semi Design B端设计规范系统 (极智科技蓝 & 磨砂水晶重构版)
    ========================================================================== */
 
-/* -------------------- 1. 全局设计代币 (Design Tokens) -------------------- */
+/* -------------------- 1. 全局设计代币 (Design Tokens - OKLCH 规范) -------------------- */
 :root {
-    /* 字体 */
+    /* 字体族 */
     --semi-font-sans: 'Noto Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
     --semi-font-heading: 'Figtree', 'Noto Sans', -apple-system, BlinkMacSystemFont, sans-serif;
     --semi-font-mono: 'SF Mono', 'SFMono-Regular', Consolas, "Liberation Mono", Courier, monospace;
     
-    /* 品牌主色 (极智深海蓝 & 冰川蓝系) */
-    --semi-color-primary: #0066ff;            /* 现代冰川蓝 */
-    --semi-color-primary-hover: #297eff;      /* 悬浮鲜蓝 */
-    --semi-color-primary-active: #0052cc;     /* 激活深蓝 */
-    --semi-color-primary-disabled: #94c1ff;
-    --semi-color-primary-light: rgba(0, 102, 255, 0.06); /* 极浅蓝透明背景 */
+    /* 官方 OKLCH 亮色调色板 (SaaS Day Mode) */
+    --semi-color-bg-0: oklch(1 0 0);                /* 白色卡片背景 */
+    --semi-color-bg-1: oklch(0.99 0.005 200);       /* 极淡青蓝灰全局 background */
+    --semi-color-bg-2: oklch(0.96 0.01 200);        /* 浅灰蓝背景次级 (Muted) */
+    --semi-color-border: oklch(0.92 0.01 220);      /* 灰蓝描边 */
+    --semi-color-text-0: oklch(0.2 0.03 220);       /* 深海蓝黑主文本 */
+    --semi-color-text-1: oklch(0.35 0.02 220);      /* 次级文本 */
+    --semi-color-text-2: oklch(0.5 0.02 230);       /* 辅助/静默文本 */
     
-    /* 状态与辅助色 */
-    --semi-color-success: #10b981;    /* 活泼翡翠绿 */
-    --semi-color-warning: #f59e0b;    /* 亮丽琥珀黄 */
-    --semi-color-danger: #ef4444;     /* 亮丽珊瑚红 */
+    /* 官方 OKLCH 医疗科技主品牌色 (Primary) */
+    --semi-color-primary: oklch(0.55 0.13 195);     /* 青蓝色 Primary */
+    --semi-color-primary-hover: oklch(0.62 0.13 195);
+    --semi-color-primary-active: oklch(0.48 0.13 195);
+    --semi-color-primary-disabled: oklch(0.85 0.05 195);
+    --semi-color-primary-light: oklch(0.96 0.02 195);
     
-    /* 日间模式 (Bright Mode / Premium Frost Grey) */
-    --semi-color-bg-0: rgba(255, 255, 255, 0.75); /* 水晶半透明白 */
-    --semi-color-bg-1: #f3f7fa;                    /* 极清透 slate 蓝灰背景 */
-    --semi-color-bg-2: #e8f0f6;                    /* 次级背景 */
-    --semi-color-border: rgba(0, 102, 255, 0.08);  /* 冰川微蓝描边 */
-    --semi-color-text-0: #0a192f;                  /* 深邃主字 */
-    --semi-color-text-1: #3b4e66;                  /* 中性次文本 */
-    --semi-color-text-2: #7e8c9f;                  /* 辅助/静默文本 */
+    /* 官方 OKLCH 警情状态与反馈色 */
+    --semi-color-success: oklch(0.7 0.16 155);      /* 薄荷翠绿 */
+    --semi-color-warning: oklch(0.78 0.16 75);      /* 琥珀亮黄 */
+    --semi-color-danger: oklch(0.62 0.23 22);       /* 绯红警戒 */
+    --semi-color-info: oklch(0.62 0.14 230);         /* 天空深蓝 */
     
-    /* 阴影栈 (多层柔和投影，创造高档悬浮感) */
+    /* 圆角层级递增规范 */
+    --radius: 0.625rem;                             /* 基准圆角 10px */
+    --semi-border-radius-sm: calc(var(--radius) - 4px); /* 6px */
+    --semi-border-radius-md: calc(var(--radius) - 2px); /* 8px */
+    --semi-border-radius-lg: var(--radius);             /* 10px */
+    --semi-border-radius-xl: calc(var(--radius) + 4px); /* 14px */
+    
+    /* 阴影栈 (多层柔和投影) */
     --semi-shadow-sm: 0 2px 8px -2px rgba(10, 25, 47, 0.05);
     --semi-shadow-md: 0 10px 25px -5px rgba(10, 25, 47, 0.08), 0 8px 16px -6px rgba(10, 25, 47, 0.04);
     --semi-shadow-lg: 0 20px 40px -10px rgba(10, 25, 47, 0.12), 0 12px 24px -8px rgba(10, 25, 47, 0.06);
     
-    --semi-border-radius-sm: 8px;
-    --semi-border-radius-md: 12px;
-    --semi-border-radius-lg: 20px;
-    
-    /* 缓动过渡 (超平滑贝塞尔曲线，符合极高端动效规范) */
+    /* 缓动过渡 (超平滑贝塞尔曲线) */
     --semi-transition-smooth: all 400ms cubic-bezier(0.16, 1, 0.3, 1);
     --semi-transition-bounce: all 450ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -59,12 +63,16 @@ body {
     line-height: 1.65;
     overflow: hidden;
     height: 100vh;
+    /* 开启等宽数字排版，防抖动 */
+    font-feature-settings: 'tnum' 1, 'ss01' 1;
 }
 
-h1, h2, h3, h4, h5, h6, .stat-num, .kpi-val, .system-clock, .main-header .current-bc {
+h1, h2, h3, h4, h5, h6, .stat-num, .kpi-val, .system-clock, .main-header .current-bc, .watch-kpi-val {
     font-family: var(--semi-font-heading);
     letter-spacing: -0.02em;
     font-weight: 700;
+    /* 核心数字对齐防刷新抖动 */
+    font-feature-settings: 'tnum' 1, 'ss01' 1;
 }
 
 /* 补齐所有可点击元素的高级手势光标 */
@@ -358,48 +366,58 @@ body, .sidebar, .main-header, .main-panel, .kpi-card, .chart-card, .data-table-c
 }
 
 /* -------------------- 4. 大屏暗色模式独占类 (.semi-always-dark) -------------------- */
+/* -------------------- 4. 大屏暗色模式独占类 (.semi-always-dark) -------------------- */
 .semi-always-dark {
-    /* 覆盖颜色变量为暗色模式 */
-    --semi-color-bg-0: rgba(18, 18, 24, 0.7); /* 超薄透暗夜磨砂 */
-    --semi-color-bg-1: #0a0a0f;
-    --semi-color-border: rgba(0, 102, 255, 0.15);
-    --semi-color-text-0: #f8fafc;
-    --semi-color-text-1: #94a3b8;
-    --semi-color-text-2: #64748b;
+    /* 引入大屏暗色 OKLCH 官方设计令牌 */
+    --screen-bg: oklch(0.16 0.03 230);
+    --screen-panel: oklch(0.22 0.05 230);
+    --screen-border: oklch(0.4 0.08 200 / 30%);
+    --screen-foreground: oklch(0.97 0.01 200);
+    --screen-muted: oklch(0.72 0.04 220);
+    --screen-accent: oklch(0.78 0.18 195);
+    
+    /* 映射覆盖现有变量 */
+    --semi-color-bg-0: var(--screen-panel);
+    --semi-color-bg-1: var(--screen-bg);
+    --semi-color-bg-2: oklch(0.28 0.04 230);
+    --semi-color-border: var(--screen-border);
+    --semi-color-text-0: var(--screen-foreground);
+    --semi-color-text-1: var(--screen-muted);
+    --semi-color-text-2: oklch(0.6 0.03 220);
 }
 
 /* 仅在暗色模式下，对侧边栏与头部进行深色背景强化 */
 .semi-always-dark .sidebar {
-    background-color: rgba(10, 10, 15, 0.85);
-    border-right-color: rgba(0, 102, 255, 0.12);
+    background-color: var(--screen-bg);
+    border-right-color: var(--screen-border);
 }
 
 .semi-always-dark .nav-item:hover {
-    background-color: rgba(0, 102, 255, 0.08);
-    color: #3b82f6;
+    background-color: oklch(0.78 0.18 195 / 8%);
+    color: var(--screen-accent);
 }
 
 .semi-always-dark .nav-item.active {
-    background-color: rgba(0, 102, 255, 0.12);
-    color: #60a5fa;
-    box-shadow: inset 3px 0 0 0 #60a5fa;
+    background-color: oklch(0.78 0.18 195 / 12%);
+    color: var(--screen-accent);
+    box-shadow: inset 3px 0 0 0 var(--screen-accent);
 }
 
 .semi-always-dark .main-header {
-    background-color: rgba(10, 10, 15, 0.85);
-    border-bottom-color: rgba(0, 102, 255, 0.12);
+    background-color: var(--screen-bg);
+    border-bottom-color: var(--screen-border);
 }
 
 .semi-always-dark .system-clock {
-    background-color: rgba(0, 102, 255, 0.05);
-    border-color: rgba(0, 102, 255, 0.2);
-    color: #60a5fa;
-    text-shadow: 0 0 8px rgba(96, 165, 250, 0.4);
+    background-color: oklch(0.78 0.18 195 / 5%);
+    border-color: var(--screen-accent);
+    color: var(--screen-accent);
+    text-shadow: 0 0 8px oklch(0.78 0.18 195 / 40%);
 }
 
-/* 业务监管大屏背景美化：注入漫反射光圈与CSS科技网格线 */
+/* 业务监管大屏背景美化：注入漫反射光圈与官方 32px 白色微弱网格线 */
 .semi-always-dark #m07-dashboard {
-    background: radial-gradient(circle at 50% 20%, #0f1c3f 0%, #03050a 100%);
+    background: radial-gradient(circle at 50% 20%, oklch(0.24 0.06 230) 0%, oklch(0.14 0.02 230) 100%);
     position: relative;
     overflow: hidden;
 }
@@ -408,34 +426,47 @@ body, .sidebar, .main-header, .main-panel, .kpi-card, .chart-card, .data-table-c
     content: "";
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
+    /* 采用 32px 密实度网格，oklch(1 0 0 / 4%) 4%不透明度白色网格 */
     background-image: 
-        linear-gradient(rgba(0, 102, 255, 0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 102, 255, 0.02) 1px, transparent 1px);
-    background-size: 40px 40px;
+        linear-gradient(oklch(1 0 0 / 4%) 1px, transparent 1px),
+        linear-gradient(90deg, oklch(1 0 0 / 4%) 1px, transparent 1px);
+    background-size: 32px 32px;
     pointer-events: none;
     z-index: 1;
 }
 
-/* 大屏下卡片增强：科技感磨砂蓝光边框 + 极其平缓的浮起阴影 */
+/* 大屏下卡片增强：科技玻璃拟态 (linear-gradient 160deg + color-mix 漫反射反光) */
 .semi-always-dark .kpi-card,
 .semi-always-dark .chart-card,
 .semi-always-dark .data-table-card,
 .semi-always-dark .device-monitor-card {
-    background: rgba(13, 25, 48, 0.55);
+    background: linear-gradient(
+        160deg, 
+        color-mix(in oklab, var(--screen-panel) 90%, transparent), 
+        color-mix(in oklab, var(--screen-bg) 90%, transparent)
+    );
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(0, 102, 255, 0.18);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--screen-border);
+    box-shadow: 
+        inset 0 1px 0 oklch(1 0 0 / 4%), /* 顶部物理微反光 */
+        0 0 0 1px oklch(1 0 0 / 2%),
+        0 12px 30px rgba(0, 0, 0, 0.4);
     position: relative;
     z-index: 2;
+    /* 巨型大屏容器圆角 (Radius XL - 14px) */
+    border-radius: var(--semi-border-radius-xl);
 }
 
 .semi-always-dark .kpi-card:hover,
 .semi-always-dark .chart-card:hover,
 .semi-always-dark .data-table-card:hover,
 .semi-always-dark .device-monitor-card:hover {
-    border-color: rgba(0, 102, 255, 0.4);
-    box-shadow: 0 15px 35px rgba(0, 102, 255, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    border-color: var(--screen-accent);
+    box-shadow: 
+        inset 0 1px 0 oklch(1 0 0 / 8%),
+        0 0 15px oklch(0.78 0.18 195 / 20%),
+        0 15px 35px rgba(0, 0, 0, 0.45);
     transform: translateY(-4px) scale(1.01); /* 平滑 3D 浮起 */
 }
 
