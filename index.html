@@ -811,27 +811,43 @@
                 
                 <!-- D03: 我的在管病人 -->
                 <section id="d03-patients" class="content-section">
-                    <div class="patients-workspace">
-                        <!-- 左侧病人列表 -->
-                        <div class="patients-sidebar-list">
-                            <div class="search-box-wrapper" style="margin-bottom: 12px;">
-                                <input type="text" id="patient-search-input" class="premium-input" placeholder="搜索在管居民姓名...">
-                            </div>
-                            <ul class="patient-items-container" id="patient-items-list">
-                                <!-- 动态加载病人列表 -->
-                            </ul>
-                        </div>
-                        <!-- 右侧病人健康画像 -->
-                        <div class="patient-portrait-detail" id="patient-portrait-detail-view">
-                            <div class="empty-state-portrait">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:48px;height:48px;color:var(--semi-color-text-2)">
-                                    <circle cx="12" cy="8" r="4"/>
-                                    <path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/>
-                                </svg>
-                                <p>请在左侧选择一位居民查看健康画像</p>
-                            </div>
+                    <!-- 页面头部操作栏 -->
+                    <div class="card-management-header" style="justify-content: space-between; border-bottom: 1px solid var(--semi-color-border); padding-bottom: 12px; margin-bottom: 16px;">
+                        <h3 style="font-size: 16px; font-weight: 800; color: var(--semi-color-text-0); margin: 0;">我的在管病人列表</h3>
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            <input type="text" id="patient-search-input" placeholder="输入在管居民姓名检索..." class="premium-input" style="width: 200px; height: 32px; font-size:12.5px;">
+                            <select id="patient-level-filter" class="premium-select" style="width: 130px; height: 32px; font-size:12.5px;">
+                                <option value="">全部评级</option>
+                                <option value="red">🔴 高危红色</option>
+                                <option value="yellow">🟡 黄色预警</option>
+                                <option value="green">🟢 正常绿色</option>
+                            </select>
                         </div>
                     </div>
+
+                    <!-- 表格视图 (全宽展示) -->
+                    <div class="table-workspace-container" style="background:var(--semi-color-bg-0); border:1px solid var(--semi-color-border); border-radius: var(--semi-border-radius-lg); padding: 20px; display:flex; flex-direction:column; gap:12px;">
+                        <div class="table-view-container" style="overflow-x:auto;">
+                            <table class="premium-table" style="font-size:13px;">
+                                <thead>
+                                    <tr>
+                                        <th style="width:30px;"><input type="checkbox"></th>
+                                        <th>居民姓名</th>
+                                        <th>性别/年龄</th>
+                                        <th>健康评级</th>
+                                        <th>今日运动步数</th>
+                                        <th>实时心率</th>
+                                        <th>血压数据</th>
+                                        <th style="text-align:right;">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="doctor-patients-table-body">
+                                    <!-- JS 动态渲染表格行 -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
                     
                     <!-- 医生工作台专属：医患 IM 即时通讯弹窗浮动层 -->
                     <div class="doctor-im-modal" id="doctor-im-modal-view">
@@ -932,51 +948,31 @@
                 
                 <!-- D04: 专科方案管理 -->
                 <section id="d04-schemes" class="content-section">
-                    <div class="doctor-schemes-workspace">
-                        <!-- 左侧模版库 -->
-                        <div class="schemes-template-list">
-                            <h4 class="sub-panel-title">调理方案模版库 (只读套用)</h4>
-                            <ul class="template-items-container" id="doctor-template-items-list">
-                                <!-- 动态加载模版 -->
-                            </ul>
-                        </div>
-                        <!-- 右侧编辑与手机预览 -->
-                        <div class="scheme-preview-and-edit">
-                            <div class="scheme-editor-layout">
-                                <div class="scheme-content-panel card-card" style="padding:16px;">
-                                    <h4 class="sub-panel-title">方案定制与微调下发</h4>
-                                    <div class="form-row">
-                                        <label class="premium-label">方案名称</label>
-                                        <input type="text" id="doc-edit-scheme-name" class="premium-input">
-                                    </div>
-                                    <div class="form-row">
-                                        <label class="premium-label">方案节点编辑</label>
-                                        <div class="nodes-drag-list" id="doc-edit-nodes-list" style="max-height:220px; overflow-y:auto;">
-                                            <!-- 方案节点 -->
-                                        </div>
-                                    </div>
-                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px;">
-                                        <button class="btn btn-secondary" id="btn-add-text-node">添加文字节点</button>
-                                        <button class="btn btn-primary" id="btn-send-scheme-to-patient">一键下发至在管居民</button>
-                                    </div>
-                                </div>
-                                <!-- 📱 3D 拟物手机预览框 -->
-                                <div class="scheme-preview-panel">
-                                    <h4 class="sub-panel-title">居民手机端模拟预览</h4>
-                                    <div class="phone-mockup">
-                                        <div class="phone-screen">
-                                            <div class="phone-status-bar">
-                                                <span>09:41</span>
-                                                <span>🔋 100%</span>
-                                            </div>
-                                            <div class="phone-app-header">主动健康调理方案</div>
-                                            <div class="phone-app-body" id="phone-preview-body-container">
-                                                <!-- 动态渲染手机端预览内容 -->
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                    <!-- 页面头部操作栏 -->
+                    <div class="card-management-header" style="justify-content: space-between; border-bottom: 1px solid var(--semi-color-border); padding-bottom: 12px; margin-bottom: 16px;">
+                        <h3 style="font-size: 16px; font-weight: 800; color: var(--semi-color-text-0); margin: 0;">专科健康方案管理</h3>
+                        <button class="btn btn-primary" id="btn-doc-create-scheme" style="font-size:12.5px; padding: 6px 14px;">+ 新建调理方案</button>
+                    </div>
+
+                    <!-- 表格视图 (全宽展示) -->
+                    <div class="table-workspace-container" style="background:var(--semi-color-bg-0); border:1px solid var(--semi-color-border); border-radius: var(--semi-border-radius-lg); padding: 20px; display:flex; flex-direction:column; gap:12px;">
+                        <div class="table-view-container" style="overflow-x:auto;">
+                            <table class="premium-table" style="font-size:13px;">
+                                <thead>
+                                    <tr>
+                                        <th>方案编号</th>
+                                        <th>方案名称</th>
+                                        <th>包含干预节点</th>
+                                        <th>推荐调理方向</th>
+                                        <th>下发套用次数</th>
+                                        <th>更新维护时间</th>
+                                        <th style="text-align:right;">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="doctor-schemes-table-body">
+                                    <!-- JS 动态渲染表格行 -->
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </section>

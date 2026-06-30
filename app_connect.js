@@ -1219,6 +1219,9 @@ async function toggleSchemeStatus(id, checked) {
         });
         await fetchSchemesList();
         renderSchemesTable();
+        if (document.getElementById("doctor-schemes-table-body")) {
+            renderDoctorSchemesModule();
+        }
     } catch (e) {
         alert("操作失败: " + e.message);
     }
@@ -2600,63 +2603,74 @@ function openCommissionModal(id) {
 // ==========================================================================
 
 // --- D03. 我的在管病人 ---
+// --- D03. 我的在管病人 ---
 function renderPatientsModule() {
-    const listContainer = document.getElementById("patient-items-list");
-    if (!listContainer) return;
+    const tbody = document.getElementById("doctor-patients-table-body");
+    if (!tbody) return;
     
-    // 初始化一些默认数据
+    // 获取检索和筛选参数
     const searchVal = document.getElementById("patient-search-input")?.value.trim().toLowerCase() || "";
+    const filterLevel = document.getElementById("patient-level-filter")?.value || "";
     
-    // 过滤病人：高危(red)置顶，然后按最近联系时间
+    // 过滤在管病人
     let filtered = state.residents.filter(r => {
-        return searchVal ? r.name.toLowerCase().includes(searchVal) : true;
+        const matchesSearch = searchVal ? r.name.toLowerCase().includes(searchVal) : true;
+        const matchesLevel = filterLevel ? r.health_level === filterLevel : true;
+        return matchesSearch && matchesLevel;
     });
     
+    // 按照健康危害等级置顶排序 (高危红色 -> 警告黄色 -> 正常绿色)
     const levelMap = { "red": 0, "yellow": 1, "green": 2 };
     filtered.sort((a, b) => levelMap[a.health_level] - levelMap[b.health_level]);
     
     if (filtered.length === 0) {
-        listContainer.innerHTML = `<li style="padding:10px; text-align:center; color:var(--semi-color-text-2); font-size:12px;">无在管居民数据</li>`;
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--semi-color-text-2); padding:24px;">无匹配的在管病人数据</td></tr>`;
         return;
     }
     
-    listContainer.innerHTML = filtered.map(r => {
+    tbody.innerHTML = filtered.map(r => {
         let levelBadge = "";
-        if (r.health_level === "red") levelBadge = `<span class="badge badge-danger" style="animation: bounce-anim 1s infinite alternate;">高危红警</span>`;
-        else if (r.health_level === "yellow") levelBadge = `<span class="badge badge-warning">中危黄警</span>`;
-        else levelBadge = `<span class="badge badge-success" style="background:#e6fcf5; color:#0ca678;">健康绿码</span>`;
-        
-        const isCurrent = r.id === state.activePatientId;
-        const alertClass = (r.health_level === "red") ? "warning-item-card unhandled-high" : "";
+        if (r.health_level === "red") levelBadge = `<span class="badge badge-danger" style="animation: bounce-anim 1s infinite alternate;">🔴 高危红色</span>`;
+        else if (r.health_level === "yellow") levelBadge = `<span class="badge badge-warning">🟡 黄色预警</span>`;
+        else levelBadge = `<span class="badge badge-success" style="background:#e6fcf5; color:#0ca678;">🟢 正常绿色</span>`;
         
         return `
-            <li class="patient-item-card ${isCurrent ? 'active' : ''} ${alertClass}" onclick="selectPatient('${r.id}')">
-                <div style="display:flex; flex-direction:column; gap:4px; width:100%;">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span style="font-weight:600; font-size:13.5px;">${r.name} (${r.gender} · ${r.age}岁)</span>
-                        ${levelBadge}
+            <tr>
+                <td><input type="checkbox"></td>
+                <td>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        ${getFormalAvatar(r.gender, r.age, r.name)}
+                        <div>
+                            <span style="font-weight:600; color:var(--semi-color-text-0);">${r.name}</span>
+                            <div style="font-size:11px; color:var(--semi-color-text-2);">ID_${r.id}</div>
+                        </div>
                     </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; font-size:11.5px; color:var(--semi-color-text-2);">
-                        <span>心率: ${r.heart_rate}bpm</span>
-                        <span>血氧: ${r.blood_oxygen}%</span>
+                </td>
+                <td>${r.gender} / ${r.age}岁</td>
+                <td>${levelBadge}</td>
+                <td class="font-mono">${r.steps ? r.steps.toLocaleString() : '0'} 步</td>
+                <td class="font-mono">${r.heart_rate} bpm</td>
+                <td class="font-mono">${r.blood_pressure} mmHg</td>
+                <td style="text-align:right;">
+                    <div style="display:flex; justify-content:flex-end; gap:8px;">
+                        <button class="btn btn-secondary btn-sm" onclick="openResidentModal('${r.id}')" style="font-size:12px; padding: 4px 10px;">🧬 健康画像</button>
+                        <button class="btn btn-primary btn-sm" onclick="openDoctorImModal('${r.id}', '${r.name}', '${r.health_level}')" style="font-size:12px; padding: 4px 10px;">💬 发起 IM</button>
                     </div>
-                </div>
-            </li>
+                </td>
+            </tr>
         `;
     }).join("");
     
-    // 监听搜索输入
+    // 监听搜索输入与筛选切换
     const searchInput = document.getElementById("patient-search-input");
     if (searchInput && !searchInput.dataset.bound) {
         searchInput.dataset.bound = "true";
-        searchInput.addEventListener("input", () => {
-            renderPatientsModule();
-        });
+        searchInput.addEventListener("input", renderPatientsModule);
     }
-    
-    // 若此前选中了病人，渲染其画像详情，否则保持空状态
-    if (state.activePatientId) {
-        selectPatient(state.activePatientId);
+    const levelFilter = document.getElementById("patient-level-filter");
+    if (levelFilter && !levelFilter.dataset.bound) {
+        levelFilter.dataset.bound = "true";
+        levelFilter.addEventListener("change", renderPatientsModule);
     }
 }
 
@@ -3068,127 +3082,57 @@ function selectWarning(id) {
 
 // --- D04. 专科方案管理 ---
 function renderDoctorSchemesModule() {
-    const container = document.getElementById("doctor-template-items-list");
-    if (!container) return;
+    const tbody = document.getElementById("doctor-schemes-table-body");
+    if (!tbody) return;
     
     if (state.schemes.length === 0) {
-        container.innerHTML = `<li style="padding:10px; text-align:center; color:var(--semi-color-text-2);">暂无调理方案模板</li>`;
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--semi-color-text-2); padding: 24px;">暂无调理方案模板</td></tr>`;
         return;
     }
     
-    container.innerHTML = state.schemes.map(s => {
-        const isCurrent = s.id === state.selectedSchemeId;
-        let typeBadge = `<span class="badge" style="background:#e8f0f6; color:#0066ff;">${s.report_type}驱动</span>`;
+    tbody.innerHTML = state.schemes.map(s => {
+        const typeMap = {
+            "sleep": "💤 睡眠健康指导",
+            "cardio": "❤️ 心血管主动干预",
+            "pressure": "🧠 情绪与心理调理"
+        };
+        const direction = typeMap[s.report_type] || "🧬 主动健康调理";
+        const nodeCount = s.nodes ? s.nodes.length : 0;
+        
+        // 随机一个 mock 累计下发套用次数
+        const mockCount = (s.name.length * 7) % 40 + 5;
+        const updatedAt = s.updated_at || "2026-06-30";
+        
         return `
-            <li class="template-item-card ${isCurrent ? 'active' : ''}" onclick="selectDoctorScheme('${s.id}')">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                    <span style="font-weight:700; font-size:12.5px;">${s.name}</span>
-                    ${typeBadge}
-                </div>
-                <div style="font-size:11px; color:var(--semi-color-text-2);">关联产品数: ${s.products ? s.products.length : 0}</div>
-            </li>
+            <tr>
+                <td class="font-mono" style="font-weight:700; color:var(--semi-color-text-2);">SCH_${s.id.substring(0, 5).toUpperCase()}</td>
+                <td><span style="font-weight:600; color:var(--semi-color-text-0);">${s.name}</span></td>
+                <td><span class="badge" style="background:rgba(0,102,255,0.08); color:#0066ff;">${nodeCount} 个步骤节点</span></td>
+                <td>${direction}</td>
+                <td class="font-mono">${mockCount} 次</td>
+                <td style="color:var(--semi-color-text-2); font-size:12px;">${updatedAt}</td>
+                <td style="text-align:right;">
+                    <div style="display:flex; justify-content:flex-end; align-items:center; gap:12px;">
+                        <span class="badge ${s.status === 'published' ? 'badge-primary' : 'badge-warning'}">
+                            ${s.status === 'published' ? '已启用' : '草稿暂存'}
+                        </span>
+                        <label class="switch" style="margin:0;">
+                            <input type="checkbox" ${s.status === 'published' ? 'checked' : ''} onchange="toggleSchemeStatus('${s.id}', this.checked)">
+                            <span class="slider"></span>
+                        </label>
+                        <button class="btn btn-secondary btn-sm" onclick="openSchemeEditorModal('${s.id}')" style="font-size:12px; padding: 4px 10px;">⚙️ 定制编辑</button>
+                    </div>
+                </td>
+            </tr>
         `;
     }).join("");
     
-    // 初始化节点添加与一键下发事件
-    const btnAdd = document.getElementById("btn-add-text-node");
-    if (btnAdd && !btnAdd.dataset.bound) {
-        btnAdd.dataset.bound = "true";
-        btnAdd.onclick = () => addNodeToDocScheme();
+    // 绑定顶部新建按钮
+    const btnCreate = document.getElementById("btn-doc-create-scheme");
+    if (btnCreate && !btnCreate.dataset.bound) {
+        btnCreate.dataset.bound = "true";
+        btnCreate.onclick = () => openSchemeEditorModal("NEW");
     }
-    
-    const btnSend = document.getElementById("btn-send-scheme-to-patient");
-    if (btnSend && !btnSend.dataset.bound) {
-        btnSend.dataset.bound = "true";
-        btnSend.onclick = () => sendSchemeToPatient();
-    }
-    
-    if (state.selectedSchemeId) {
-        selectDoctorScheme(state.selectedSchemeId);
-    }
-}
-
-function selectDoctorScheme(id) {
-    state.selectedSchemeId = id;
-    document.querySelectorAll(".template-item-card").forEach(el => el.classList.remove("active"));
-    
-    const s = state.schemes.find(x => x.id === id);
-    if (!s) return;
-    
-    const nameInput = document.getElementById("doc-edit-scheme-name");
-    if (nameInput) nameInput.value = s.name;
-    
-    state.editingSchemeNodes = JSON.parse(JSON.stringify(s.nodes || []));
-    renderDocEditingNodes();
-}
-
-function renderDocEditingNodes() {
-    const list = document.getElementById("doc-edit-nodes-list");
-    if (!list) return;
-    
-    if (state.editingSchemeNodes.length === 0) {
-        list.innerHTML = `<div style="text-align:center; color:var(--semi-color-text-2); font-size:11px; padding:10px;">暂无节点，点击下方添加</div>`;
-        return;
-    }
-    
-    list.innerHTML = state.editingSchemeNodes.map((n, i) => `
-        <div class="drag-item" style="margin-bottom:6px;">
-            <span class="drag-handle">☰</span>
-            <input type="text" class="premium-input node-content-input" value="${n.content}" oninput="updateDocSchemeNode(${i}, this.value)">
-            <button class="node-delete-btn" onclick="deleteDocSchemeNode(${i})">&times;</button>
-        </div>
-    `).join("");
-    
-    // 渲染右侧 3D 手机预览
-    renderPhonePreview();
-}
-
-window.updateDocSchemeNode = function(index, val) {
-    if (state.editingSchemeNodes[index]) {
-        state.editingSchemeNodes[index].content = val;
-        renderPhonePreview();
-    }
-};
-
-window.deleteDocSchemeNode = function(index) {
-    state.editingSchemeNodes.splice(index, 1);
-    renderDocEditingNodes();
-};
-
-function addNodeToDocScheme() {
-    state.editingSchemeNodes.push({ type: "text", content: "新调理养生动作或膳食建议" });
-    renderDocEditingNodes();
-}
-
-function renderPhonePreview() {
-    const body = document.getElementById("phone-preview-body-container");
-    if (!body) return;
-    
-    const nodesHtml = state.editingSchemeNodes.map((n, idx) => `
-        <div class="phone-node-item" style="background:#f3f7fa; border-radius:6px; padding:8px 10px; margin-bottom:8px; border-left:3px solid var(--semi-color-primary); font-size:11px;">
-            <div style="font-weight:700; color:var(--semi-color-primary); margin-bottom:2px;">节点 ${idx+1}</div>
-            <div>${n.content}</div>
-        </div>
-    `).join("");
-    
-    body.innerHTML = `
-        <div style="padding:10px; display:flex; flex-direction:column; gap:6px;">
-            <h5 style="margin:0 0 6px 0; font-size:13px; font-weight:700; color:var(--semi-color-text-0);">${document.getElementById("doc-edit-scheme-name")?.value || "我的专科方案"}</h5>
-            <div style="font-size:10px; color:var(--semi-color-text-2); margin-bottom:8px;">责任管理医生：张仲景 主任医师</div>
-            ${nodesHtml}
-            <div style="border-top:1px dashed #cbd5e1; padding-top:8px; margin-top:8px; text-align:center; font-size:10px; color:var(--semi-color-success);">
-                💚 该方案已匹配您的健康画像，请每日打卡调理
-            </div>
-        </div>
-    `;
-}
-
-function sendSchemeToPatient() {
-    if (!state.selectedSchemeId) {
-        alert("请先套用一个方案模板。");
-        return;
-    }
-    alert(`下发成功！个性化调理方案已一键推送至在管居民的移动端小程序。`);
 }
 
 // --- D07. 居民绑定审批 ---
