@@ -23,6 +23,7 @@ function getFormalAvatar(gender, age, name) {
 
 // 全局状态
 const state = {
+    currentRole: "agency", // "agency" (机构管理员) | "doctor" (平台医生)
     currentModule: "m07-dashboard",
     doctors: [],
     residents: [],
@@ -51,19 +52,64 @@ const state = {
         warningsTrend: null,
         warningsRatio: null,
         residentTrend: null
-    }
+    },
+
+    // 医生端特定状态
+    activePatientId: null,
+    activeWarningId: null,
+    imWatchTimer: null,
+    imWatchSeconds: 30,
+    chatMessages: {}, // 格式: { residentId: [{ sender: 'doc'|'patient', text: '...', time: '...' }] },
+    publishedArticles: [
+        { id: "art_1", title: "高血压人群如何科学安排低盐膳食？", status: "published", reads: 142, type: "text" },
+        { id: "art_2", title: "夏季防暑降温：中医食疗养生指导", status: "draft", reads: 0, type: "text" }
+    ]
 };
+
+// 角色导航代币定义
+const AGENCY_NAV_ITEMS = [
+    { target: "m07-dashboard", text: "业务监管大屏", icon: `<svg class="semi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="9" rx="1" /><rect x="14" y="3" width="7" height="5" rx="1" /><rect x="14" y="12" width="7" height="9" rx="1" /><rect x="3" y="16" width="7" height="5" rx="1" /></svg>` },
+    { target: "m01-approval", text: "医生入驻审批", icon: `<svg class="semi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>` },
+    { target: "m02-residents", text: "在管居民档案", icon: `<svg class="semi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /><polyline points="10 9 9 9 8 9" /></svg>` },
+    { target: "m03-schemes", text: "调理方案维护", icon: `<svg class="semi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2" ry="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /></svg>` },
+    { target: "m04-service-packages", text: "调理服务包维护", icon: `<svg class="semi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /><polyline points="3.27 6.96 12 12.01 20.73 6.96" /><line x1="12" y1="22.08" x2="12" y2="12" /></svg>` },
+    { target: "m05-products", text: "药食同源商品", icon: `<svg class="semi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" /><line x1="3" y1="6" x2="21" y2="6" /><path d="M16 10a4 4 0 0 1-8 0" /></svg>` },
+    { target: "m06-cms", text: "CMS 内容运营", icon: `<svg class="semi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><line x1="3" y1="9" x2="21" y2="9" /><line x1="9" y1="21" x2="9" y2="9" /></svg>` },
+    { target: "m08-devices", text: "智能设备管理", icon: `<svg class="semi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="7" /><rect x="9" y="1" width="6" height="4" rx="1" /><rect x="9" y="19" width="6" height="4" rx="1" /><path d="M12 9v3l2 2" /></svg>` },
+    { target: "m09-settings", text: "系统配置与日志", icon: `<svg class="semi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>` }
+];
+
+const DOCTOR_NAV_ITEMS = [
+    { target: "d03-patients", text: "我的在管病人", icon: `<svg class="semi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /></svg>` },
+    { target: "d06-warnings", text: "待处理预警工作台", icon: `<svg class="semi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>` },
+    { target: "d04-schemes", text: "专科方案管理", icon: `<svg class="semi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2" ry="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /></svg>` },
+    { target: "d07-bindings", text: "居民绑定审批", icon: `<svg class="semi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="9 11 12 14 22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>` },
+    { target: "d01-profile", text: "医生执业信息", icon: `<svg class="semi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10" /><path d="M12 8v8" /><path d="M8 12h8" /></svg>` },
+    { target: "d02-articles", text: "科普主页维护", icon: `<svg class="semi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></svg>` }
+];
 
 // ==================== 1. 初始化与模块路由 ====================
 
-document.addEventListener("DOMContentLoaded", () => {
+// 双触发兼容机制：确保 DOM 加载不论早晚均能成功执行初始化
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initApp);
+} else {
+    initApp();
+}
+
+function initApp() {
     initClock();
-    initSidebar();
+    initRoleSwitcher(); // 注册角色切换器
+    initSidebar();      // 动态侧边栏加载
     initModalHandlers();
     
-    // 默认加载大屏数据
-    loadModuleData("m07-dashboard");
-});
+    // 初始加载当前角色的首屏数据
+    if (state.currentRole === "agency") {
+        loadModuleData("m07-dashboard");
+    } else {
+        loadModuleData("d03-patients");
+    }
+}
 
 function initClock() {
     const clockEl = document.getElementById("system-clock");
@@ -81,8 +127,70 @@ function initClock() {
     }
 }
 
+// 注册角色切换器事件
+function initRoleSwitcher() {
+    const btnAgency = document.getElementById("btn-role-agency");
+    const btnDoctor = document.getElementById("btn-role-doctor");
+    
+    if (btnAgency && btnDoctor) {
+        btnAgency.addEventListener("click", () => switchRole("agency"));
+        btnDoctor.addEventListener("click", () => switchRole("doctor"));
+    }
+}
+
+function switchRole(role) {
+    if (state.currentRole === role) return;
+    
+    state.currentRole = role;
+    
+    // 切换按钮高亮
+    const btnAgency = document.getElementById("btn-role-agency");
+    const btnDoctor = document.getElementById("btn-role-doctor");
+    const parentBc = document.querySelector(".parent-bc");
+    
+    if (btnAgency && btnDoctor) {
+        if (role === "agency") {
+            btnAgency.classList.add("active");
+            btnDoctor.classList.remove("active");
+            if (parentBc) parentBc.textContent = "机构控制台";
+        } else {
+            btnAgency.classList.remove("active");
+            btnDoctor.classList.add("active");
+            if (parentBc) parentBc.textContent = "医生工作台";
+        }
+    }
+    
+    // 重新渲染侧边栏
+    initSidebar();
+    
+    // 默认跳转模块
+    const defaultModule = role === "agency" ? "m07-dashboard" : "d03-patients";
+    switchModule(defaultModule);
+}
+
 function initSidebar() {
-    const navItems = document.querySelectorAll(".nav-item");
+    const container = document.querySelector(".sidebar-nav");
+    if (!container) return;
+    
+    // 动态绘制对应角色的菜单
+    const items = state.currentRole === "agency" ? AGENCY_NAV_ITEMS : DOCTOR_NAV_ITEMS;
+    
+    let html = `<ul class="nav-list">`;
+    items.forEach((item, index) => {
+        // 判断激活状态
+        const isActive = item.target === state.currentModule;
+        html += `
+            <li class="nav-item ${isActive ? 'active' : ''}" data-target="${item.target}">
+                ${item.icon}
+                <span class="nav-text">${item.text}</span>
+            </li>
+        `;
+    });
+    html += `</ul>`;
+    container.innerHTML = html;
+    
+    // 重新绑定点击切换模块事件
+    const navItems = container.querySelectorAll(".nav-item");
     navItems.forEach(item => {
         item.addEventListener("click", () => {
             navItems.forEach(i => i.classList.remove("active"));
@@ -105,7 +213,10 @@ function switchModule(targetId) {
     }
     
     const bcTitle = document.getElementById("current-bc-title");
-    const navText = document.querySelector(`.nav-item[data-target="${targetId}"] .nav-text`);
+    
+    // 适配动态渲染下的 nav-text 获取
+    const navItem = document.querySelector(`.nav-item[data-target="${targetId}"]`);
+    const navText = navItem ? navItem.querySelector(".nav-text") : null;
     if (bcTitle && navText) {
         bcTitle.textContent = navText.textContent;
     }
@@ -113,13 +224,18 @@ function switchModule(targetId) {
     state.currentModule = targetId;
     
     // 🌓 业务监管大屏全深色模式切换
-    if (targetId === "m07-dashboard") {
+    if (targetId === "m07-dashboard" && state.currentRole === "agency") {
         document.body.classList.add("semi-always-dark");
     } else {
         document.body.classList.remove("semi-always-dark");
     }
     
-    // 清理图表与 Canvas 渲染循环，防内存溢出
+    // 销毁时钟/IM计时器等，防止内存泄漏或冲突
+    if (state.imWatchTimer) {
+        clearInterval(state.imWatchTimer);
+        state.imWatchTimer = null;
+    }
+    
     destroyChart("residentTrend");
     stopRelationshipAnimation();
     
@@ -184,6 +300,30 @@ async function loadModuleData(moduleId) {
                 await fetchSettingsData();
                 await fetchAuditLogs();
                 renderSettingsModule();
+                break;
+                
+            // 医生工作台模块
+            case "d03-patients":
+                await fetchResidentsList();
+                renderPatientsModule();
+                break;
+            case "d06-warnings":
+                await fetchResidentsList();
+                renderWarningsModule();
+                break;
+            case "d04-schemes":
+                await fetchSchemesList();
+                await fetchProductsList();
+                renderDoctorSchemesModule();
+                break;
+            case "d07-bindings":
+                renderBindingRequestsModule();
+                break;
+            case "d01-profile":
+                renderDoctorProfileModule();
+                break;
+            case "d02-articles":
+                renderDoctorArticlesModule();
                 break;
         }
     } catch (err) {
@@ -1034,15 +1174,18 @@ function renderSettingsModule() {
 // ==================== 5. 模态框与辅助交互控制 ====================
 
 function initModalHandlers() {
-    // 监听关闭模态框，增加 Canvas 循环安全终止
+    // 监听关闭模态框，增加 Canvas 循环安全终止 (防御性空值检查)
     document.querySelectorAll(".modal-close, [data-close]").forEach(btn => {
         btn.addEventListener("click", () => {
-            const modalId = btn.getAttribute("data-close") || btn.closest(".modal").id;
-            closeModal(modalId);
-            
-            // 如果关闭居民画像，安全终止 Canvas 动画帧
-            if (modalId === "resident-portrait-modal") {
-                stopRelationshipAnimation();
+            const modalEl = btn.closest(".modal");
+            const modalId = btn.getAttribute("data-close") || (modalEl ? modalEl.id : null);
+            if (modalId) {
+                closeModal(modalId);
+                
+                // 如果关闭居民画像，安全终止 Canvas 动画帧
+                if (modalId === "resident-portrait-modal") {
+                    stopRelationshipAnimation();
+                }
             }
         });
     });
@@ -1941,4 +2084,816 @@ function openCommissionModal(id) {
     if (servRateEl) servRateEl.value = c.service_commission || 0;
     
     openModal("commission-edit-modal");
+}
+
+// ==========================================================================
+// 16. 医生工作台核心交互与数据渲染模块 (Doctor Workspace Core Engine)
+// ==========================================================================
+
+// --- D03. 我的在管病人 ---
+function renderPatientsModule() {
+    const listContainer = document.getElementById("patient-items-list");
+    if (!listContainer) return;
+    
+    // 初始化一些默认数据
+    const searchVal = document.getElementById("patient-search-input")?.value.trim().toLowerCase() || "";
+    
+    // 过滤病人：高危(red)置顶，然后按最近联系时间
+    let filtered = state.residents.filter(r => {
+        return searchVal ? r.name.toLowerCase().includes(searchVal) : true;
+    });
+    
+    const levelMap = { "red": 0, "yellow": 1, "green": 2 };
+    filtered.sort((a, b) => levelMap[a.health_level] - levelMap[b.health_level]);
+    
+    if (filtered.length === 0) {
+        listContainer.innerHTML = `<li style="padding:10px; text-align:center; color:var(--semi-color-text-2); font-size:12px;">无在管居民数据</li>`;
+        return;
+    }
+    
+    listContainer.innerHTML = filtered.map(r => {
+        let levelBadge = "";
+        if (r.health_level === "red") levelBadge = `<span class="badge badge-danger" style="animation: bounce-anim 1s infinite alternate;">高危红警</span>`;
+        else if (r.health_level === "yellow") levelBadge = `<span class="badge badge-warning">中危黄警</span>`;
+        else levelBadge = `<span class="badge badge-success" style="background:#e6fcf5; color:#0ca678;">健康绿码</span>`;
+        
+        const isCurrent = r.id === state.activePatientId;
+        const alertClass = (r.health_level === "red") ? "warning-item-card unhandled-high" : "";
+        
+        return `
+            <li class="patient-item-card ${isCurrent ? 'active' : ''} ${alertClass}" onclick="selectPatient('${r.id}')">
+                <div style="display:flex; flex-direction:column; gap:4px; width:100%;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-weight:600; font-size:13.5px;">${r.name} (${r.gender} · ${r.age}岁)</span>
+                        ${levelBadge}
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; font-size:11.5px; color:var(--semi-color-text-2);">
+                        <span>心率: ${r.heart_rate}bpm</span>
+                        <span>血氧: ${r.blood_oxygen}%</span>
+                    </div>
+                </div>
+            </li>
+        `;
+    }).join("");
+    
+    // 监听搜索输入
+    const searchInput = document.getElementById("patient-search-input");
+    if (searchInput && !searchInput.dataset.bound) {
+        searchInput.dataset.bound = "true";
+        searchInput.addEventListener("input", () => {
+            renderPatientsModule();
+        });
+    }
+    
+    // 若此前选中了病人，渲染其画像详情，否则保持空状态
+    if (state.activePatientId) {
+        selectPatient(state.activePatientId);
+    }
+}
+
+async function selectPatient(id) {
+    state.activePatientId = id;
+    
+    // 高亮选择行
+    document.querySelectorAll(".patient-item-card").forEach(el => el.classList.remove("active"));
+    
+    // 异步拉取画像并填充
+    try {
+        const detailContainer = document.getElementById("patient-portrait-detail-view");
+        if (!detailContainer) return;
+        
+        const data = await request(`/residents/portrait?id=${id}`);
+        const r = data.resident;
+        
+        let levelText = "健康绿码";
+        let levelColor = "var(--semi-color-success)";
+        if (r.health_level === "red") {
+            levelText = "红色高危警报";
+            levelColor = "var(--semi-color-danger)";
+        } else if (r.health_level === "yellow") {
+            levelText = "黄色中危警报";
+            levelColor = "var(--semi-color-warning)";
+        }
+        
+        detailContainer.innerHTML = `
+            <div class="patient-portrait-full" style="display:flex; flex-direction:column; gap:20px; height:100%;">
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--semi-color-border); padding-bottom:16px;">
+                    <div style="display:flex; align-items:center; gap:14px;">
+                        ${getFormalAvatar(r.gender, r.age, r.name)}
+                        <div>
+                            <h3 style="margin:0; font-size:18px;">${r.name}</h3>
+                            <p style="margin:2px 0 0 0; font-size:12px; color:var(--semi-color-text-2);">档案号: ID_${r.id} | 服务时长: 6个月</p>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <button class="btn btn-secondary" onclick="openDoctorImModal('${r.id}', '${r.name}', '${r.health_level}')">💬 发起主动沟通 (IM)</button>
+                        <button class="btn btn-primary" onclick="switchModule('d04-schemes')">📋 下发调理方案</button>
+                    </div>
+                </div>
+                
+                <div class="form-row-grid">
+                    <div class="card-card" style="padding:14px; background-color: var(--semi-color-bg-1);">
+                        <span class="premium-label">健康体征及状态</span>
+                        <p style="margin:4px 0 0 0; font-size:15px; font-weight:700; color:${levelColor}">${levelText}</p>
+                        <div style="display:flex; gap:14px; margin-top:10px; font-size:12px; color:var(--semi-color-text-1);">
+                            <span>血压: ${r.blood_pressure} mmHg</span>
+                            <span>血糖: 5.4 mmol/L</span>
+                        </div>
+                    </div>
+                    <div class="card-card" style="padding:14px; background-color: var(--semi-color-bg-1);">
+                        <span class="premium-label">关联智能穿戴设备</span>
+                        <p style="margin:4px 0 0 0; font-size:13.5px; font-weight:600;">⌚ AI 智能防护手表 (Active 4)</p>
+                        <div style="display:flex; gap:14px; margin-top:10px; font-size:12px; color:var(--semi-color-text-2);">
+                            <span>设备在线: ${r.device_online ? '在线' : '离线'}</span>
+                            <span>电池电量: ${r.device_power}%</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 30天心率血氧波形折线图 -->
+                <div class="card-card" style="padding:16px; flex:1; min-height:220px; display:flex; flex-direction:column;">
+                    <span class="premium-label" style="margin-bottom:10px;">📈 近 30 天体征连续波动趋势 (连续采集)</span>
+                    <div style="flex:1; position:relative;">
+                        <canvas id="residentTrendChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- 历史警报与干预记录 -->
+                <div class="card-card" style="padding:16px; max-height: 180px; overflow-y:auto;">
+                    <span class="premium-label" style="margin-bottom:8px; display:block;">⚠️ 历史干预归档与预警日志</span>
+                    <table class="premium-table" style="font-size:11.5px; width:100%;">
+                        <thead>
+                            <tr>
+                                <th>时间</th>
+                                <th>事件类型</th>
+                                <th>体征明细</th>
+                                <th>状态</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.warning_history.map(w => `
+                                <tr>
+                                    <td>${w.time}</td>
+                                    <td>${w.type}</td>
+                                    <td>${w.detail}</td>
+                                    <td class="${w.status === '已处理' ? 'text-green' : 'text-danger'}">${w.status}</td>
+                                </tr>
+                            `).join("")}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+        
+        // 渲染图表
+        renderResidentTrendChart(data.trends);
+        
+    } catch (e) {
+        console.error("加载画像详情失败:", e);
+    }
+}
+
+// 打开医生端主动沟通IM对话浮层
+function openDoctorImModal(patientId, patientName, healthLevel) {
+    const modal = document.getElementById("doctor-im-modal-view");
+    if (!modal) return;
+    
+    // 初始化聊天记录
+    if (!state.chatMessages[patientId]) {
+        state.chatMessages[patientId] = [
+            { sender: 'patient', text: `医生您好，我的手表刚刚发出了心率异常提醒，瞬时心率好像偏高，请问这严重吗？`, time: "今天 10:20" },
+            { sender: 'doc', text: `您好，我是您的责任管理医师。已经查看到您的瞬时心率达到异常阈值。请先在室内平躺或静坐休息，不要剧烈运动。`, time: "今天 10:22" }
+        ];
+    }
+    
+    document.getElementById("im-chatting-name").textContent = patientName;
+    const levelBadge = document.getElementById("im-chatting-level");
+    if (levelBadge) {
+        if (healthLevel === "red") {
+            levelBadge.className = "badge badge-danger";
+            levelBadge.textContent = "高危警报";
+        } else if (healthLevel === "yellow") {
+            levelBadge.className = "badge badge-warning";
+            levelBadge.textContent = "中危警报";
+        } else {
+            levelBadge.className = "badge badge-success";
+            levelBadge.textContent = "健康绿码";
+        }
+    }
+    
+    modal.classList.add("active");
+    renderImMessages(patientId);
+    
+    // 绑定发送事件
+    const btnSend = document.getElementById("btn-send-im-msg");
+    const textInput = document.getElementById("im-text-send-input");
+    
+    // 强制清理前序监听
+    const newBtn = btnSend.cloneNode(true);
+    btnSend.parentNode.replaceChild(newBtn, btnSend);
+    
+    newBtn.addEventListener("click", () => {
+        const val = textInput.value.trim();
+        if (!val) return;
+        
+        state.chatMessages[patientId].push({
+            sender: 'doc',
+            text: val,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        });
+        textInput.value = "";
+        renderImMessages(patientId);
+        
+        // 自动产生模拟回复
+        setTimeout(() => {
+            state.chatMessages[patientId].push({
+                sender: 'patient',
+                text: `收到！谢谢医生指导，我休息一会看看。`,
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            });
+            renderImMessages(patientId);
+        }, 1500);
+    });
+    
+    // 关闭事件
+    const btnClose = document.getElementById("btn-close-im");
+    if (btnClose) {
+        btnClose.onclick = () => {
+            modal.classList.remove("active");
+            if (state.imWatchTimer) {
+                clearInterval(state.imWatchTimer);
+                state.imWatchTimer = null;
+            }
+        };
+    }
+    
+    // 开启 30 秒轮询的手表实时体征小看板
+    startImWatchDashboard(patientId);
+}
+
+function renderImMessages(patientId) {
+    const box = document.getElementById("im-chat-messages-container");
+    if (!box) return;
+    
+    const msgs = state.chatMessages[patientId] || [];
+    box.innerHTML = msgs.map(m => `
+        <div class="chat-bubble ${m.sender === 'doc' ? 'doc' : 'patient'}">
+            <div style="font-size:11px; opacity:0.75; margin-bottom:2px;">${m.sender === 'doc' ? '我' : '居民'} · ${m.time}</div>
+            <div>${m.text}</div>
+        </div>
+    `).join("");
+    
+    // 滚动到底部
+    box.scrollTop = box.scrollHeight;
+}
+
+// 常用语模板套用一键填充到 IM 输入框
+window.useQuickPhrase = function(type) {
+    const textInput = document.getElementById("im-text-send-input");
+    if (!textInput) return;
+    
+    let text = "";
+    if (type === '日常问候') {
+        text = "您好！今天感觉怎么样？设备体征数据未见明显异常，请继续保持规律作息和适度运动。";
+    } else if (type === '用药提醒') {
+        text = "温馨提示：请按时服用调理方案中的心脑血管养护类膳食包，多喝温开水，忌辛辣生冷。";
+    } else if (type === '干预随访') {
+        text = "我已经为您定制了专科调理方案，已下发到您的居民端小程序，请抽空确认查看并开始日常打卡。";
+    } else if (type === '警报跟进') {
+        text = "注意！检测到您刚才出现了瞬时心脑血管风险报警，请立即停止一切活动，坐下或静卧，配合深呼吸，若身体持续不适请联系家属或送医。";
+    }
+    textInput.value = text;
+};
+
+// 开启智能手表 30s 看板轮询与数值随机漂移
+function startImWatchDashboard(patientId) {
+    const hrVal = document.getElementById("watch-hr-num");
+    const oxVal = document.getElementById("watch-ox-num");
+    const bpVal = document.getElementById("watch-bp-num");
+    const sleepVal = document.getElementById("watch-sleep-num");
+    const countdownEl = document.querySelector(".refresh-countdown");
+    
+    const resident = state.residents.find(r => r.id === patientId);
+    if (!resident) return;
+    
+    if (state.imWatchTimer) {
+        clearInterval(state.imWatchTimer);
+    }
+    
+    state.imWatchSeconds = 30;
+    
+    function updateWatchUI() {
+        // 心率在原数值上上下随机漂移 2bpm
+        const driftHr = resident.heart_rate + Math.floor(Math.random() * 5) - 2;
+        if (hrVal) hrVal.textContent = driftHr;
+        
+        // 血氧在 95-99% 波动
+        const driftOx = Math.min(100, Math.max(90, resident.blood_oxygen + Math.floor(Math.random() * 3) - 1));
+        if (oxVal) oxVal.textContent = driftOx;
+        
+        // 血压
+        if (bpVal) bpVal.textContent = resident.blood_pressure;
+        
+        // 睡眠
+        if (sleepVal) sleepVal.textContent = "7.2";
+        
+        // 异常高亮红色报警防御
+        const hrBox = document.getElementById("watch-hr-box");
+        if (hrBox) {
+            if (driftHr > 100 || driftHr < 60) {
+                hrBox.classList.add("warning-box");
+            } else {
+                hrBox.classList.remove("warning-box");
+            }
+        }
+        
+        const oxBox = document.getElementById("watch-ox-box");
+        if (oxBox) {
+            if (driftOx < 95) {
+                oxBox.classList.add("warning-box");
+            } else {
+                oxBox.classList.remove("warning-box");
+            }
+        }
+    }
+    
+    updateWatchUI();
+    
+    state.imWatchTimer = setInterval(() => {
+        state.imWatchSeconds--;
+        if (countdownEl) countdownEl.textContent = `${state.imWatchSeconds}s`;
+        
+        if (state.imWatchSeconds <= 0) {
+            state.imWatchSeconds = 30;
+            updateWatchUI();
+        }
+    }, 1000);
+}
+
+// --- D06. 待处理预警工作台 ---
+function renderWarningsModule() {
+    const listContainer = document.getElementById("warning-alert-list-container");
+    if (!listContainer) return;
+    
+    // 从居民列表里筛选出高危(red)的当做待处理预警单
+    const alertResidents = state.residents.filter(r => r.health_level === "red");
+    
+    const todoCountEl = document.getElementById("warning-todo-count");
+    if (todoCountEl) {
+        todoCountEl.textContent = alertResidents.length;
+    }
+    
+    if (alertResidents.length === 0) {
+        listContainer.innerHTML = `<li style="padding:16px; text-align:center; color:var(--semi-color-text-2); font-size:12px;">🎉 当前没有待处理的高危健康预警单</li>`;
+        return;
+    }
+    
+    listContainer.innerHTML = alertResidents.map(r => {
+        const isCurrent = r.id === state.activeWarningId;
+        return `
+            <li class="warning-item-card unhandled-high ${isCurrent ? 'active' : ''}" onclick="selectWarning('${r.id}')">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <span style="font-weight:700; color:var(--semi-color-danger); font-size:13px;">⚠️ 瞬时心脑血管预警</span>
+                    <span style="font-size:11px; color:var(--semi-color-text-2);">今天 10:20</span>
+                </div>
+                <div style="font-size:12.5px; color:var(--semi-color-text-1);">在管居民: <strong style="color:var(--semi-color-text-0);">${r.name}</strong></div>
+                <div style="font-size:12.5px; color:var(--semi-color-text-1); margin-top:2px;">异常体征: 心率高位波动至 ${r.heart_rate}bpm</div>
+            </li>
+        `;
+    }).join("");
+    
+    if (state.activeWarningId) {
+        selectWarning(state.activeWarningId);
+    }
+}
+
+function selectWarning(id) {
+    state.activeWarningId = id;
+    
+    document.querySelectorAll(".warning-item-card").forEach(el => el.classList.remove("active"));
+    
+    const detailContainer = document.getElementById("warning-handling-detail-view");
+    if (!detailContainer) return;
+    
+    const r = state.residents.find(x => x.id === id);
+    if (!r) return;
+    
+    detailContainer.innerHTML = `
+        <div style="display:flex; flex-direction:column; gap:20px; height:100%;">
+            <div style="border-bottom:1px solid var(--semi-color-border); padding-bottom:16px;">
+                <h3 style="margin:0; font-size:17px; color:var(--semi-color-danger);">⚠️ 待处置高危健康预警研判</h3>
+                <p style="margin:4px 0 0 0; font-size:12px; color:var(--semi-color-text-2);">预警单号: WN_${r.id} | 触发类型: 瞬时心率与心血管波动过载</p>
+            </div>
+            
+            <div class="card-card" style="padding:14px; background-color:rgba(239,68,68,0.02); border-color:rgba(239,68,68,0.2);">
+                <span class="premium-label" style="color:var(--semi-color-danger);">异常事件细节</span>
+                <p style="margin:4px 0 0 0; font-size:13.5px; font-weight:600; line-height:1.5;">
+                    居民 [${r.name}] 于 2026-06-30 09:20 智能防摔手表采集心率异常，瞬时心率突破预置阈值（100 bpm），当前数值达 ${r.heart_rate}bpm，伴有血压过高波动。
+                </p>
+            </div>
+            
+            <div class="card-card" style="padding:14px; background-color:rgba(0,102,255,0.02); border-color:rgba(0,102,255,0.15);">
+                <span class="premium-label" style="color:var(--semi-color-primary);">🤖 平台 AI 健康干预助手建议</span>
+                <p style="margin:4px 0 0 0; font-size:12.5px; line-height:1.6; color:var(--semi-color-text-1);">
+                    研判分析：患者中老年且有历史高血压史，可能由于情绪剧烈起伏或睡眠质量差诱发瞬时心动过速。建议立即套用 <strong>[中医心脑血管益气养护调理方案]</strong> 下发至其小程序，并通过 IM 对话发起主动关怀与用药指导。
+                </p>
+            </div>
+            
+            <!-- 医生处置归档表单 -->
+            <div class="card-card" style="padding:18px;">
+                <h4 class="sub-panel-title" style="margin-bottom:12px;">预警单处置意见归档</h4>
+                <form id="form-warning-handle-submit">
+                    <div class="form-row">
+                        <label class="premium-label">处置干预动作 *</label>
+                        <select id="warning-handle-action" class="premium-select" required>
+                            <option value="scheme">套用模板下发方案并归档</option>
+                            <option value="im">发起 IM 主动随访跟进并归档</option>
+                            <option value="check">标记为正常噪点并直接归档</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <label class="premium-label">医生干预处置研判说明 *</label>
+                        <textarea id="warning-handle-reason" class="premium-textarea" rows="3" required placeholder="请输入您的专业医学研判说明，此项将同步存入居民健康画像并推送审计日志..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="margin-top:8px; width:100%;">确认执行干预并处置归档</button>
+                </form>
+            </div>
+        </div>
+    `;
+    
+    // 绑定表单提交事件
+    const form = document.getElementById("form-warning-handle-submit");
+    if (form) {
+        form.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const action = document.getElementById("warning-handle-action").value;
+            const reason = document.getElementById("warning-handle-reason").value.trim();
+            
+            // 归档处理：将该居民健康评级变绿，从而减少未处理预警数量，形成完整的数据链路
+            r.health_level = "green";
+            state.activeWarningId = null;
+            
+            // 审计日志推送
+            const actionText = action === "scheme" ? "下发调理方案" : (action === "im" ? "发起 IM 主动随访" : "研判标记正常");
+            const log_entry = {
+                time: new Date().toISOString().replace('T', ' ').substring(0, 19),
+                user: "平台责任医生(张仲景)",
+                action: `对高危预警单 WN_${r.id} 进行快速处置: [${actionText}]。研判说明: ${reason}`,
+                ip: "192.168.1.58"
+            };
+            state.auditLogs.unshift(log_entry);
+            
+            alert(`预警处置归档成功！医生研判说明已成功保存并上报，该高危警情已归档关闭。`);
+            
+            // 重新刷新两个页面的展示
+            renderWarningsModule();
+            // 同步刷新大屏的警报 KPI 数量！
+            const kpiWarnEl = document.getElementById("kpi-warnings");
+            if (kpiWarnEl) {
+                const cur = parseInt(kpiWarnEl.textContent) || 0;
+                kpiWarnEl.textContent = Math.max(0, cur - 1);
+            }
+        });
+    }
+}
+
+// --- D04. 专科方案管理 ---
+function renderDoctorSchemesModule() {
+    const container = document.getElementById("doctor-template-items-list");
+    if (!container) return;
+    
+    if (state.schemes.length === 0) {
+        container.innerHTML = `<li style="padding:10px; text-align:center; color:var(--semi-color-text-2);">暂无调理方案模板</li>`;
+        return;
+    }
+    
+    container.innerHTML = state.schemes.map(s => {
+        const isCurrent = s.id === state.selectedSchemeId;
+        let typeBadge = `<span class="badge" style="background:#e8f0f6; color:#0066ff;">${s.report_type}驱动</span>`;
+        return `
+            <li class="template-item-card ${isCurrent ? 'active' : ''}" onclick="selectDoctorScheme('${s.id}')">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                    <span style="font-weight:700; font-size:12.5px;">${s.name}</span>
+                    ${typeBadge}
+                </div>
+                <div style="font-size:11px; color:var(--semi-color-text-2);">关联产品数: ${s.products ? s.products.length : 0}</div>
+            </li>
+        `;
+    }).join("");
+    
+    // 初始化节点添加与一键下发事件
+    const btnAdd = document.getElementById("btn-add-text-node");
+    if (btnAdd && !btnAdd.dataset.bound) {
+        btnAdd.dataset.bound = "true";
+        btnAdd.onclick = () => addNodeToDocScheme();
+    }
+    
+    const btnSend = document.getElementById("btn-send-scheme-to-patient");
+    if (btnSend && !btnSend.dataset.bound) {
+        btnSend.dataset.bound = "true";
+        btnSend.onclick = () => sendSchemeToPatient();
+    }
+    
+    if (state.selectedSchemeId) {
+        selectDoctorScheme(state.selectedSchemeId);
+    }
+}
+
+function selectDoctorScheme(id) {
+    state.selectedSchemeId = id;
+    document.querySelectorAll(".template-item-card").forEach(el => el.classList.remove("active"));
+    
+    const s = state.schemes.find(x => x.id === id);
+    if (!s) return;
+    
+    const nameInput = document.getElementById("doc-edit-scheme-name");
+    if (nameInput) nameInput.value = s.name;
+    
+    state.editingSchemeNodes = JSON.parse(JSON.stringify(s.nodes || []));
+    renderDocEditingNodes();
+}
+
+function renderDocEditingNodes() {
+    const list = document.getElementById("doc-edit-nodes-list");
+    if (!list) return;
+    
+    if (state.editingSchemeNodes.length === 0) {
+        list.innerHTML = `<div style="text-align:center; color:var(--semi-color-text-2); font-size:11px; padding:10px;">暂无节点，点击下方添加</div>`;
+        return;
+    }
+    
+    list.innerHTML = state.editingSchemeNodes.map((n, i) => `
+        <div class="drag-item" style="margin-bottom:6px;">
+            <span class="drag-handle">☰</span>
+            <input type="text" class="premium-input node-content-input" value="${n.content}" oninput="updateDocSchemeNode(${i}, this.value)">
+            <button class="node-delete-btn" onclick="deleteDocSchemeNode(${i})">&times;</button>
+        </div>
+    `).join("");
+    
+    // 渲染右侧 3D 手机预览
+    renderPhonePreview();
+}
+
+window.updateDocSchemeNode = function(index, val) {
+    if (state.editingSchemeNodes[index]) {
+        state.editingSchemeNodes[index].content = val;
+        renderPhonePreview();
+    }
+};
+
+window.deleteDocSchemeNode = function(index) {
+    state.editingSchemeNodes.splice(index, 1);
+    renderDocEditingNodes();
+};
+
+function addNodeToDocScheme() {
+    state.editingSchemeNodes.push({ type: "text", content: "新调理养生动作或膳食建议" });
+    renderDocEditingNodes();
+}
+
+function renderPhonePreview() {
+    const body = document.getElementById("phone-preview-body-container");
+    if (!body) return;
+    
+    const nodesHtml = state.editingSchemeNodes.map((n, idx) => `
+        <div class="phone-node-item" style="background:#f3f7fa; border-radius:6px; padding:8px 10px; margin-bottom:8px; border-left:3px solid var(--semi-color-primary); font-size:11px;">
+            <div style="font-weight:700; color:var(--semi-color-primary); margin-bottom:2px;">节点 ${idx+1}</div>
+            <div>${n.content}</div>
+        </div>
+    `).join("");
+    
+    body.innerHTML = `
+        <div style="padding:10px; display:flex; flex-direction:column; gap:6px;">
+            <h5 style="margin:0 0 6px 0; font-size:13px; font-weight:700; color:var(--semi-color-text-0);">${document.getElementById("doc-edit-scheme-name")?.value || "我的专科方案"}</h5>
+            <div style="font-size:10px; color:var(--semi-color-text-2); margin-bottom:8px;">责任管理医生：张仲景 主任医师</div>
+            ${nodesHtml}
+            <div style="border-top:1px dashed #cbd5e1; padding-top:8px; margin-top:8px; text-align:center; font-size:10px; color:var(--semi-color-success);">
+                💚 该方案已匹配您的健康画像，请每日打卡调理
+            </div>
+        </div>
+    `;
+}
+
+function sendSchemeToPatient() {
+    if (!state.selectedSchemeId) {
+        alert("请先套用一个方案模板。");
+        return;
+    }
+    alert(`下发成功！个性化调理方案已一键推送至在管居民的移动端小程序。`);
+}
+
+// --- D07. 居民绑定审批 ---
+function renderBindingRequestsModule() {
+    const grid = document.getElementById("binding-requests-grid");
+    if (!grid) return;
+    
+    // 模拟几张绑定申请卡片
+    const requests = [
+        { id: "req_1", name: "李秀芬", age: 68, gender: "女", report: "重度睡眠呼吸暂停风险（血氧 < 90%）", time: "2026-06-30 08:30" },
+        { id: "req_2", name: "王建国", age: 72, gender: "男", report: "瞬时高血压波动（160/95 mmHg）", time: "2026-06-30 09:12" }
+    ];
+    
+    if (requests.length === 0) {
+        grid.innerHTML = `<div style="text-align:center; color:var(--semi-color-text-2); font-size:12px; grid-column:span 3;">暂无待审批的居民绑定申请</div>`;
+        return;
+    }
+    
+    grid.innerHTML = requests.map(r => `
+        <div class="binding-request-card" id="bind-card-${r.id}">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-weight:700; font-size:14px;">${r.name} (${r.gender} · ${r.age}岁)</span>
+                <span style="font-size:10.5px; color:var(--semi-color-text-2);">${r.time}</span>
+            </div>
+            <div style="font-size:12px; color:var(--semi-color-text-1); background-color:var(--semi-color-bg-1); padding:8px; border-radius:var(--semi-border-radius-md); border: 1px solid var(--semi-color-border);">
+                <strong>体征报告摘要：</strong>${r.report}
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px;">
+                <button class="btn btn-secondary btn-sm" onclick="handleBindingApproval('${r.id}', 'rejected')">驳回</button>
+                <button class="btn btn-primary btn-sm" onclick="handleBindingApproval('${r.id}', 'approved')">批准绑定</button>
+            </div>
+        </div>
+    `).join("");
+}
+
+window.handleBindingApproval = function(id, action) {
+    const card = document.getElementById(`bind-card-${id}`);
+    if (card) {
+        card.style.transform = "scale(0.9)";
+        card.style.opacity = "0";
+        setTimeout(() => {
+            card.remove();
+            alert(action === "approved" ? "批准成功！该居民已成功纳入您的在管责任范围内。" : "驳回申请成功，通知已下发。");
+        }, 300);
+    }
+};
+
+// --- D01. 医生信息维护 ---
+function renderDoctorProfileModule() {
+    const bioTextarea = document.getElementById("doc-profile-bio");
+    const counter = document.getElementById("profile-char-counter");
+    
+    if (bioTextarea && counter) {
+        bioTextarea.value = "主任医师，国医大师，出身中医世家。深耕《伤寒论》与《金匮要略》经方医学研究三十余载，擅长运用柴胡桂枝汤、小建中汤进行亚健康慢性病人体质调理及脾胃失调干预。针对心脑血管警情具有独特的预警研判理论，已累计指导调理服务超过一万名在管居民。";
+        counter.textContent = `${bioTextarea.value.length}/500`;
+        
+        // 绑定字数限制和实时切断
+        bioTextarea.oninput = () => {
+            let val = bioTextarea.value;
+            if (val.length > 500) {
+                bioTextarea.value = val.slice(0, 500);
+            }
+            counter.textContent = `${bioTextarea.value.length}/500`;
+        };
+    }
+    
+    const btnSave = document.getElementById("btn-save-doc-profile");
+    if (btnSave) {
+        btnSave.onclick = () => {
+            alert("保存成功！个人执业简介及隐私限制已即时发布同步至 C 端名医名片。");
+        };
+    }
+}
+
+// --- D02. 科普主页维护 ---
+function renderDoctorArticlesModule() {
+    const list = document.getElementById("doc-published-articles-list");
+    if (!list) return;
+    
+    // 渲染科普列表
+    list.innerHTML = state.publishedArticles.map(a => `
+        <li style="display:flex; justify-content:space-between; align-items:center; background:var(--semi-color-bg-1); padding:8px 12px; border-radius:var(--semi-border-radius-md); font-size:12.5px; border:1px solid var(--semi-color-border);">
+            <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-weight:600;">${a.title}</span>
+                <span style="font-size:10px; color:var(--semi-color-text-2);">状态: ${a.status === 'published' ? '已公开发布' : '草稿暂存'} | 浏览量: ${a.reads}</span>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="deletePublishedArticle('${a.id}')" style="padding:4px 8px; font-size:11px;">删除</button>
+        </li>
+    `).join("");
+    
+    // 渲染小程序预览
+    renderDoctorCardMiniApp();
+    
+    // 绑定发布按钮
+    const btnPublish = document.getElementById("btn-publish-art-btn");
+    if (btnPublish && !btnPublish.dataset.bound) {
+        btnPublish.dataset.bound = "true";
+        btnPublish.onclick = () => publishArticleSubmit();
+    }
+    
+    // 绑定草稿按钮
+    const btnDraft = document.getElementById("btn-save-draft-btn");
+    if (btnDraft && !btnDraft.dataset.bound) {
+        btnDraft.dataset.bound = "true";
+        btnDraft.onclick = () => saveArticleDraft();
+    }
+    
+    // 视频校验与第一帧封面图截取提示
+    const videoInput = document.getElementById("doc-video-file-input");
+    if (videoInput) {
+        videoInput.onchange = (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                if (file.type !== "video/mp4") {
+                    alert("错误：仅支持 MP4 格式视频文件！已拦截上传。");
+                    videoInput.value = "";
+                    return;
+                }
+                alert(`上传成功！视频 [${file.name}] 已解析完毕，系统自动提取视频首帧封面进行云端配准。`);
+            }
+        };
+    }
+}
+
+function renderDoctorCardMiniApp() {
+    const preview = document.getElementById("doctor-card-miniapp-body");
+    if (!preview) return;
+    
+    const articlesHtml = state.publishedArticles.filter(x => x.status === "published").map(a => `
+        <div style="padding:6px; border-bottom:1px solid rgba(0,102,255,0.05); font-size:11px; display:flex; justify-content:space-between; align-items:center;">
+            <span>📖 ${a.title.slice(0,18)}...</span>
+            <span style="font-size:9px; color:var(--semi-color-text-2);">🔥 ${a.reads}</span>
+        </div>
+    `).join("");
+    
+    preview.innerHTML = `
+        <div style="display:flex; flex-direction:column; gap:10px;">
+            <div style="display:flex; gap:8px; align-items:center; background:rgba(0,102,255,0.03); padding:8px; border-radius:6px;">
+                <div style="width:36px; height:36px; background:#0066ff; color:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700;">张</div>
+                <div>
+                    <h5 style="margin:0; font-size:12px;">张仲景 主任医师</h5>
+                    <p style="margin:2px 0 0 0; font-size:9.5px; color:var(--semi-color-text-2);">中医内科 | 执业30年</p>
+                </div>
+            </div>
+            <div style="font-size:10px; color:var(--semi-color-text-1); line-height:1.4;">
+                <strong>主治专长：</strong>体质调理、脾胃调理、经方调理
+            </div>
+            <div style="border-top:1.5px solid var(--semi-color-border); padding-top:6px;">
+                <h6 style="margin:0 0 4px 0; font-size:10.5px; font-weight:700; color:var(--semi-color-primary);">📚 医生科普发布专栏</h6>
+                ${articlesHtml || '<div style="color:var(--semi-color-text-2); font-size:9px; text-align:center; padding:10px;">暂无公开科普内容</div>'}
+            </div>
+        </div>
+    `;
+}
+
+window.deletePublishedArticle = function(id) {
+    state.publishedArticles = state.publishedArticles.filter(a => a.id !== id);
+    renderDoctorArticlesModule();
+};
+
+function publishArticleSubmit() {
+    const titleInput = document.getElementById("doc-article-title");
+    const contentInput = document.getElementById("doc-article-content");
+    
+    if (!titleInput || !contentInput) return;
+    
+    const title = titleInput.value.trim();
+    const content = contentInput.value.trim();
+    if (!title || !content) {
+        alert("请输入标题和正文！");
+        return;
+    }
+    
+    const newArt = {
+        id: `art_${Date.now()}`,
+        title: title,
+        status: "published",
+        reads: 0,
+        type: "text"
+    };
+    state.publishedArticles.push(newArt);
+    
+    titleInput.value = "";
+    contentInput.value = "";
+    
+    alert(`科普内容 [${title}] 发布成功！即时同步发布在居民端电子名片。`);
+    renderDoctorArticlesModule();
+}
+
+function saveArticleDraft() {
+    const titleInput = document.getElementById("doc-article-title");
+    const contentInput = document.getElementById("doc-article-content");
+    
+    if (!titleInput || !contentInput) return;
+    
+    const title = titleInput.value.trim();
+    const content = contentInput.value.trim();
+    if (!title || !content) {
+        alert("请输入标题和正文以存为草稿！");
+        return;
+    }
+    
+    const newArt = {
+        id: `art_${Date.now()}`,
+        title: title,
+        status: "draft",
+        reads: 0,
+        type: "text"
+    };
+    state.publishedArticles.push(newArt);
+    
+    titleInput.value = "";
+    contentInput.value = "";
+    
+    alert(`科普草稿 [${title}] 暂存成功。`);
+    renderDoctorArticlesModule();
 }

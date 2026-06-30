@@ -1625,6 +1625,483 @@ input:checked + .slider:before {
     background-color: var(--semi-color-danger);
     color: white;
 }
+
+.btn-danger:hover {
+    background-color: #ef4444;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+}
+
+/* ==========================================================================
+   15. 角色切换与医生工作台专有样式 (Doctor Workspace Styles)
+   ========================================================================== */
+
+/* 角色切换器 (右上角 Segmented Control) */
+.role-switcher-container {
+    display: inline-flex;
+    background-color: var(--semi-color-bg-2);
+    padding: 3px;
+    border-radius: var(--semi-border-radius-md);
+    border: 1px solid var(--semi-color-border);
+    margin-right: 12px;
+}
+
+.role-switch-btn {
+    background: none;
+    border: none;
+    padding: 6px 14px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--semi-color-text-1);
+    border-radius: calc(var(--semi-border-radius-md) - 2px);
+    transition: var(--semi-transition-smooth);
+}
+
+.role-switch-btn.active {
+    background-color: var(--semi-color-primary);
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(0, 102, 255, 0.2);
+}
+
+/* 我的病人 (D03) 分左右栏 */
+.patients-workspace {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 20px;
+    height: calc(100vh - 120px);
+}
+
+.patients-sidebar-list {
+    background-color: var(--semi-color-bg-0);
+    border: 1px solid var(--semi-color-border);
+    border-radius: var(--semi-border-radius-lg);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.patient-items-container {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+    padding: 0;
+}
+
+.patient-item-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px;
+    border-radius: var(--semi-border-radius-md);
+    border: 1px solid transparent;
+    background-color: var(--semi-color-bg-1);
+    transition: var(--semi-transition-smooth);
+}
+
+.patient-item-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(0, 102, 255, 0.15);
+    background-color: rgba(0, 102, 255, 0.02);
+}
+
+.patient-item-card.active {
+    background-color: var(--semi-color-primary-light);
+    border-color: var(--semi-color-primary);
+}
+
+.patient-portrait-detail {
+    background-color: var(--semi-color-bg-0);
+    border: 1px solid var(--semi-color-border);
+    border-radius: var(--semi-border-radius-lg);
+    padding: 24px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.empty-state-portrait, .empty-state-handling {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--semi-color-text-2);
+    gap: 12px;
+}
+
+/* IM 沟通弹窗浮动层 */
+.doctor-im-modal {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(10, 25, 47, 0.5);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.doctor-im-modal.active {
+    display: flex;
+}
+
+.im-window-dialog {
+    background-color: var(--semi-color-bg-0);
+    border: 1px solid var(--semi-color-border);
+    border-radius: var(--semi-border-radius-lg);
+    width: 800px;
+    max-width: 90vw;
+    height: 550px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: var(--semi-shadow-lg);
+    animation: modalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.im-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--semi-color-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--semi-color-bg-1);
+}
+
+.im-body-layout {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    overflow: hidden;
+}
+
+.im-chat-stream-panel {
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--semi-color-border);
+    height: 100%;
+}
+
+.im-chat-messages {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    background-color: var(--semi-color-bg-1);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.chat-bubble {
+    max-width: 70%;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.chat-bubble.doc {
+    background-color: var(--semi-color-primary);
+    color: #ffffff;
+    align-self: flex-end;
+    border-bottom-right-radius: 2px;
+}
+
+.chat-bubble.patient {
+    background-color: #ffffff;
+    color: var(--semi-color-text-0);
+    align-self: flex-start;
+    border-bottom-left-radius: 2px;
+    border: 1px solid var(--semi-color-border);
+}
+
+.im-chat-input-area {
+    padding: 12px 16px;
+    border-top: 1px solid var(--semi-color-border);
+}
+
+.quick-phrases-bar {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.quick-phrase-tag {
+    font-size: 11px;
+    padding: 3px 8px;
+    background-color: var(--semi-color-bg-2);
+    color: var(--semi-color-text-1);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: var(--semi-transition-smooth);
+}
+
+.quick-phrase-tag:hover {
+    background-color: var(--semi-color-primary-light);
+    color: var(--semi-color-primary);
+}
+
+.im-input-group {
+    display: flex;
+    gap: 8px;
+}
+
+/* 智能手表实时看板 (30s 刷新) */
+.im-watch-dashboard {
+    padding: 20px;
+    background-color: var(--semi-color-bg-0);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    overflow-y: auto;
+}
+
+.im-watch-title {
+    font-size: 13px;
+    font-weight: 700;
+    margin: 0;
+    color: var(--semi-color-primary);
+}
+
+.watch-kpi-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+}
+
+.watch-kpi-card {
+    background-color: var(--semi-color-bg-1);
+    border: 1px solid var(--semi-color-border);
+    border-radius: var(--semi-border-radius-md);
+    padding: 10px;
+}
+
+.watch-kpi-label {
+    font-size: 10.5px;
+    color: var(--semi-color-text-2);
+    display: block;
+    margin-bottom: 4px;
+}
+
+.watch-kpi-val {
+    font-family: var(--semi-font-heading);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--semi-color-text-0);
+}
+
+.watch-kpi-val .unit {
+    font-size: 10px;
+    color: var(--semi-color-text-2);
+    font-weight: normal;
+}
+
+/* 异常项红色高亮 */
+.watch-kpi-card.warning-box {
+    border-color: rgba(239, 68, 68, 0.4);
+    background-color: rgba(239, 68, 68, 0.04);
+}
+
+.watch-kpi-card.warning-box .watch-kpi-val {
+    color: var(--semi-color-danger);
+}
+
+.watch-refresh-tip {
+    font-size: 10px;
+    color: var(--semi-color-text-2);
+    text-align: center;
+    margin-top: auto;
+}
+
+/* 待处理预警工作台 (D06) */
+.warnings-summary-header {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.warning-kpi-item {
+    background-color: var(--semi-color-bg-0);
+    border: 1px solid var(--semi-color-border);
+    border-radius: var(--semi-border-radius-lg);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+}
+
+.w-kpi-label {
+    font-size: 12px;
+    color: var(--semi-color-text-2);
+}
+
+.w-kpi-val {
+    font-size: 24px;
+    font-weight: 700;
+    margin-top: 4px;
+}
+
+.warnings-workspace-grid {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 20px;
+    height: calc(100vh - 240px);
+}
+
+.warnings-list-panel {
+    background-color: var(--semi-color-bg-0);
+    border: 1px solid var(--semi-color-border);
+    border-radius: var(--semi-border-radius-lg);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.warning-alert-list {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.warning-item-card {
+    padding: 14px;
+    background-color: var(--semi-color-bg-1);
+    border: 1px solid var(--semi-color-border);
+    border-radius: var(--semi-border-radius-md);
+    cursor: pointer;
+    transition: var(--semi-transition-smooth);
+}
+
+.warning-item-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--semi-color-primary);
+}
+
+.warning-item-card.active {
+    border-color: var(--semi-color-primary);
+    background-color: var(--semi-color-primary-light);
+}
+
+/* 高危未处理预警呼吸闪烁灯 */
+.warning-item-card.unhandled-high {
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    animation: alertPulseOutline 2s infinite ease-in-out;
+}
+
+@keyframes alertPulseOutline {
+    0%, 100% { border-color: rgba(239, 68, 68, 0.3); box-shadow: none; }
+    50% { border-color: rgba(239, 68, 68, 0.8); box-shadow: 0 0 8px rgba(239, 68, 68, 0.25); }
+}
+
+.warning-handling-panel {
+    background-color: var(--semi-color-bg-0);
+    border: 1px solid var(--semi-color-border);
+    border-radius: var(--semi-border-radius-lg);
+    padding: 24px;
+    overflow-y: auto;
+}
+
+/* 专科方案管理 (D04) */
+.doctor-schemes-workspace {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 20px;
+    height: calc(100vh - 120px);
+}
+
+.schemes-template-list {
+    background-color: var(--semi-color-bg-0);
+    border: 1px solid var(--semi-color-border);
+    border-radius: var(--semi-border-radius-lg);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.template-items-container {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.template-item-card {
+    padding: 12px;
+    background-color: var(--semi-color-bg-1);
+    border: 1px solid var(--semi-color-border);
+    border-radius: var(--semi-border-radius-md);
+    cursor: pointer;
+    transition: var(--semi-transition-smooth);
+}
+
+.template-item-card:hover {
+    border-color: var(--semi-color-primary);
+    background-color: rgba(0, 102, 255, 0.02);
+}
+
+.template-item-card.active {
+    background-color: var(--semi-color-primary-light);
+    border-color: var(--semi-color-primary);
+}
+
+.scheme-preview-and-edit {
+    display: flex;
+    flex-direction: column;
+}
+
+.card-card {
+    background-color: var(--semi-color-bg-0);
+    border: 1px solid var(--semi-color-border);
+    border-radius: var(--semi-border-radius-lg);
+}
+
+/* 绑定申请 (D07) */
+.bindings-grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+.binding-request-card {
+    background-color: var(--semi-color-bg-0);
+    border: 1px solid var(--semi-color-border);
+    border-radius: var(--semi-border-radius-lg);
+    padding: 16px;
+    box-shadow: var(--semi-shadow-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: var(--semi-transition-smooth);
+}
+
+.binding-request-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--semi-shadow-md);
+}
+
+/* 医生简介专长复选框样式 */
+.tag-checkbox-item {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--semi-color-text-1);
+    cursor: pointer;
+}
+
+@keyframes modalSlideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
 .btn-danger:hover {
     background-color: #d72f1a;
 }
