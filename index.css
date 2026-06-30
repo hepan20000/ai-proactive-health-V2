@@ -2518,4 +2518,240 @@ input:checked + .slider:before {
     color: var(--semi-color-text-0);
 }
 
+/* ==========================================================================
+   18. 生理数字人模型与主动健康大屏画像样式 (Physiological Twin CSS)
+   ========================================================================== */
+
+/* 深色科技弹窗遮罩与弹窗体背景锁定 */
+.screen-theme-modal .modal-dialog {
+    background: oklch(0.12 0.03 230) !important;
+}
+
+/* 画像三栏主网格 */
+.portrait-main-grid {
+    display: grid;
+    grid-template-columns: 29% 42% 29%;
+    gap: 16px;
+    font-family: var(--semi-font-mono), var(--semi-font-sans);
+    height: 700px;
+    overflow: hidden;
+}
+
+.portrait-col {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    height: 100%;
+}
+
+/* 大屏拟态玻璃卡片 */
+.screen-glass-card {
+    background: oklch(1 0 0 / 1.5%);
+    border: 1.2px solid oklch(0.3 0.08 230 / 35%);
+    border-radius: var(--semi-border-radius-md);
+    padding: 12px 14px;
+    box-shadow: inset 0 1px 0 oklch(1 0 0 / 5%);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.screen-glass-card .title {
+    font-size: 13.5px;
+    font-weight: 800;
+    color: oklch(0.95 0.01 230);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border-bottom: 1px solid oklch(0.3 0.08 230 / 20%);
+    padding-bottom: 6px;
+    margin-bottom: 2px;
+}
+
+/* 核心八大体征监测卡片 */
+.portrait-vitals-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.vital-metric-card {
+    background: oklch(1 0 0 / 1%);
+    border: 1px solid oklch(0.3 0.08 230 / 15%);
+    border-radius: var(--semi-border-radius-sm);
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    position: relative;
+    transition: var(--semi-transition-smooth);
+}
+.vital-metric-card:hover {
+    border-color: var(--screen-accent);
+    background: oklch(1 0 0 / 3%);
+}
+
+.vital-metric-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    color: oklch(0.7 0.02 230);
+}
+
+.vital-metric-val {
+    font-size: 18px;
+    font-weight: 800;
+    color: oklch(0.95 0.01 230);
+    font-family: var(--semi-font-mono);
+}
+.vital-metric-val .unit {
+    font-size: 10.5px;
+    font-weight: normal;
+    color: oklch(0.7 0.02 230);
+    margin-left: 2px;
+}
+
+/* 状态小圆点 */
+.status-dot-pulse {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    display: inline-block;
+}
+.status-dot-pulse.green { background-color: var(--semi-color-success); box-shadow: 0 0 6px var(--semi-color-success); }
+.status-dot-pulse.yellow { background-color: var(--semi-color-warning); box-shadow: 0 0 6px var(--semi-color-warning); }
+.status-dot-pulse.red { background-color: var(--semi-color-danger); box-shadow: 0 0 6px var(--semi-color-danger); animation: alert-ping-anim 1.2s infinite; }
+
+/* 3D 数字人投影容器 */
+.digital-twin-container {
+    flex: 1;
+    position: relative;
+    border: 1.2px solid oklch(0.3 0.08 230 / 25%);
+    border-radius: var(--semi-border-radius-lg);
+    background: radial-gradient(circle at center, oklch(0.2 0.05 230 / 30%) 0%, oklch(0.12 0.03 230 / 10%) 80%);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.human-hologram-img {
+    height: 90%;
+    max-height: 420px;
+    object-fit: contain;
+    mix-blend-mode: screen; /* 科技全息融合底色 */
+    opacity: 0.88;
+    filter: drop-shadow(0 0 12px oklch(0.55 0.13 195 / 40%));
+}
+
+.hologram-base-plate {
+    position: absolute;
+    bottom: 24px;
+    width: 140px;
+    height: 14px;
+    background: radial-gradient(ellipse at center, oklch(0.55 0.13 195 / 40%) 0%, oklch(0.55 0.13 195 / 0%) 70%);
+    border-radius: 50%;
+    transform: rotateX(75deg);
+    box-shadow: 0 0 15px oklch(0.55 0.13 195 / 50%);
+    animation: base-glow-anim 2.5s infinite alternate;
+}
+@keyframes base-glow-anim {
+    0% { transform: rotateX(75deg) scale(0.9); opacity: 0.5; }
+    100% { transform: rotateX(75deg) scale(1.15); opacity: 0.9; }
+}
+
+/* 数字人身体两侧悬浮标签 */
+.human-hologram-tag {
+    position: absolute;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 10.5px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    z-index: 5;
+}
+.human-hologram-tag.red {
+    background: oklch(0.62 0.23 22 / 12%);
+    border: 1px solid oklch(0.62 0.23 22 / 40%);
+    color: oklch(0.7 0.2 22);
+}
+.human-hologram-tag.yellow {
+    background: oklch(0.78 0.16 75 / 10%);
+    border: 1px solid oklch(0.78 0.16 75 / 40%);
+    color: oklch(0.75 0.15 75);
+}
+.human-hologram-tag.green {
+    background: oklch(0.7 0.16 155 / 10%);
+    border: 1px solid oklch(0.7 0.16 155 / 40%);
+    color: oklch(0.7 0.16 155);
+}
+
+/* 罗盘与中医子午流注罗盘样式 */
+.organ-clock-container {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 6px 0;
+}
+
+.organ-clock-dial {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    border: 2px solid oklch(0.3 0.08 230 / 30%);
+    background: radial-gradient(circle, oklch(0.15 0.04 230) 40%, oklch(0.1 0.02 230) 100%);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.5), 0 0 15px oklch(0.55 0.13 195 / 15%);
+}
+
+.organ-clock-hand {
+    position: absolute;
+    width: 2px;
+    height: 46px;
+    background: linear-gradient(to top, transparent 40%, var(--screen-accent) 100%);
+    bottom: 50%;
+    left: calc(50% - 1px);
+    transform-origin: bottom center;
+    z-index: 2;
+    transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.organ-clock-center {
+    width: 6px;
+    height: 6px;
+    background-color: var(--screen-accent);
+    border-radius: 50%;
+    box-shadow: 0 0 6px var(--screen-accent);
+    z-index: 3;
+}
+
+.organ-clock-label {
+    position: absolute;
+    font-size: 8.5px;
+    color: oklch(0.55 0.02 230);
+    font-weight: 700;
+}
+
+/* 器官说明区 */
+.organ-verdict-box {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 11.5px;
+    color: oklch(0.8 0.02 230);
+    line-height: 1.45;
+}
+.organ-verdict-box strong {
+    color: oklch(0.95 0.01 230);
+}
+
+
 

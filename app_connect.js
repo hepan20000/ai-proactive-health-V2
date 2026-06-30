@@ -866,47 +866,194 @@ async function openResidentModal(id) {
     if (!container) return;
     
     container.innerHTML = `
-        <div class="res-portrait-layout">
-            <div class="res-vital-grid">
-                <div class="vital-box">
-                    <span class="stat-lbl">实时心率值</span>
-                    <div class="vital-val font-mono" style="color:${r.heart_rate > 95 ? 'var(--semi-color-danger)' : 'var(--semi-color-text-0)'}">
-                        ${r.heart_rate} <span style="font-size:11px; font-weight:normal;">bpm</span>
+        <div class="portrait-main-grid">
+            <!-- 1. 左栏：基本信息 & 八大体征监测 & 生理趋势折线 -->
+            <div class="portrait-col">
+                <!-- 1.1 用户基本资料卡 -->
+                <div class="screen-glass-card" style="padding: 10px 12px; gap: 8px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-weight:800; font-size:14px; color:#fff;">${r.name}</span>
+                        <span style="font-size:11px; color:oklch(0.7 0.02 230); font-weight:700;">
+                            ${r.gender} | ${r.age}岁 | BMI ${r.bmi || '23.88'}
+                        </span>
+                    </div>
+                    <div style="font-size:11.5px; color:oklch(0.8 0.02 230); display:flex; justify-content:space-between;">
+                        <span>身高: ${r.height || '170'}cm</span>
+                        <span>体重: ${r.weight || '69'}kg</span>
+                        <span style="color:var(--screen-accent); font-family:var(--semi-font-mono); font-weight:700;">${r.phone}</span>
                     </div>
                 </div>
-                <div class="vital-box">
-                    <span class="stat-lbl">血氧饱和度</span>
-                    <div class="vital-val font-mono" style="color:${r.blood_oxygen < 95 ? 'var(--semi-color-danger)' : 'var(--semi-color-text-0)'}">
-                        ${r.blood_oxygen}%
+                
+                <!-- 1.2 核心 8 大体征监测流 (对齐参考图指标) -->
+                <div class="screen-glass-card">
+                    <span class="title">📈 核心体征实时监测</span>
+                    <div class="portrait-vitals-grid">
+                        <div class="vital-metric-card">
+                            <div class="vital-metric-top"><span>心率</span><span class="status-dot-pulse green"></span></div>
+                            <div class="vital-metric-val">${r.heart_rate}<span class="unit">bpm</span></div>
+                        </div>
+                        <div class="vital-metric-card">
+                            <div class="vital-metric-top"><span>血氧</span><span class="status-dot-pulse green"></span></div>
+                            <div class="vital-metric-val">${r.blood_oxygen}<span class="unit">%</span></div>
+                        </div>
+                        <div class="vital-metric-card">
+                            <div class="vital-metric-top"><span>呼吸率</span><span class="status-dot-pulse green"></span></div>
+                            <div class="vital-metric-val">19<span class="unit">次/分</span></div>
+                        </div>
+                        <div class="vital-metric-card">
+                            <div class="vital-metric-top"><span>体温</span><span class="status-dot-pulse green"></span></div>
+                            <div class="vital-metric-val">36.5<span class="unit">℃</span></div>
+                        </div>
+                        <div class="vital-metric-card" style="grid-column: span 2;">
+                            <div class="vital-metric-top"><span>血压</span><span class="status-dot-pulse ${r.health_level === 'red' ? 'red' : 'green'}"></span></div>
+                            <div class="vital-metric-val" style="font-size:20px;">${r.blood_pressure}<span class="unit">mmHg</span></div>
+                        </div>
+                        <div class="vital-metric-card">
+                            <div class="vital-metric-top"><span>血糖</span><span class="status-dot-pulse green"></span></div>
+                            <div class="vital-metric-val">5.4<span class="unit">mmol/L</span></div>
+                        </div>
+                        <div class="vital-metric-card">
+                            <div class="vital-metric-top"><span>尿酸</span><span class="status-dot-pulse yellow"></span></div>
+                            <div class="vital-metric-val" style="color:oklch(0.78 0.16 75); font-weight:800;">423<span class="unit">µmol/L</span></div>
+                        </div>
                     </div>
                 </div>
-                <div class="vital-box">
-                    <span class="stat-lbl">实时血压等级</span>
-                    <div class="vital-val font-mono">${r.blood_pressure}</div>
-                </div>
-                <div class="vital-box">
-                    <span class="stat-lbl">今日计步</span>
-                    <div class="vital-val font-mono">${r.steps} 步</div>
+                
+                <!-- 1.3 历史生理趋势折线 -->
+                <div class="screen-glass-card" style="flex:1;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid oklch(0.3 0.08 230 / 20%); padding-bottom: 6px; margin-bottom: 2px;">
+                        <span style="font-size:13px; font-weight:800; color:#fff;">📊 生理体征趋势折线</span>
+                        <div style="display:flex; gap:8px; font-size:10.5px; color:oklch(0.7 0.02 230); cursor:pointer;">
+                            <span style="color:var(--screen-accent); font-weight:700;">心率</span>
+                            <span>血氧</span>
+                            <span>血压</span>
+                        </div>
+                    </div>
+                    <div style="flex:1; position:relative; min-height:120px;">
+                        <canvas id="residentTrendChart" style="width:100%; height:100%;"></canvas>
+                    </div>
                 </div>
             </div>
             
-            <h4 class="card-title" style="margin-bottom:8px;">近30天历史心率与血氧健康曲线</h4>
-            <div class="chart-wrapper" style="height:170px;">
-                <canvas id="residentTrendChart"></canvas>
+            <!-- 2. 中间栏：数字人投影 & 评估结论 & 疾病预测 -->
+            <div class="portrait-col">
+                <!-- 2.1 3D数字人全息投影 -->
+                <div class="digital-twin-container">
+                    <img src="mock_assets/glowing_human.png" class="human-hologram-img">
+                    <div class="hologram-base-plate"></div>
+                    
+                    <!-- 身体拉线悬浮状态标签 -->
+                    <div class="human-hologram-tag red" style="top:18%; left:8%;">
+                        <span>⚠️ 睡眠不足</span>
+                    </div>
+                    <div class="human-hologram-tag yellow" style="top:32%; left:4%;">
+                        <span>● 异常血脂</span>
+                    </div>
+                    <div class="human-hologram-tag red" style="top:55%; left:6%;">
+                        <span>⚠️ 血压偏高</span>
+                    </div>
+                    
+                    <div class="human-hologram-tag green" style="top:15%; right:8%;">
+                        <span>✓ 正常心率</span>
+                    </div>
+                    <div class="human-hologram-tag green" style="top:38%; right:4%;">
+                        <span>✓ 正常体重</span>
+                    </div>
+                    <div class="human-hologram-tag green" style="top:60%; right:10%;">
+                        <span>✓ 尿酸适中</span>
+                    </div>
+                    
+                    <!-- 24小时评估结论 -->
+                    <div style="position:absolute; bottom:30px; text-align:center; width:100%; background:linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%); padding:24px 0 10px 0;">
+                        <div style="font-size:14.5px; font-weight:800; color:oklch(0.78 0.16 75); display:inline-flex; align-items:center; gap:8px; text-shadow:0 0 12px oklch(0.78 0.16 75 / 50%);">
+                            24小时健康评估：亚健康 <span style="letter-spacing:2px; color:oklch(0.78 0.16 75);">★★★★☆</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 2.2 未来疾病概率条 (中底) -->
+                <div class="screen-glass-card" style="padding: 10px 14px;">
+                    <span class="title" style="margin-bottom:4px;">🔮 未来一个月疾病风险预测</span>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px 16px; font-size:11px;">
+                        <div style="display:flex; flex-direction:column; gap:2px;">
+                            <div style="display:flex; justify-content:space-between; color:oklch(0.8 0.02 230);"><span>心力衰竭</span><span style="font-weight:700;">5.2%</span></div>
+                            <div class="progress-bar-bg" style="height:4px; background:oklch(0.3 0.08 230 / 30%);"><div class="progress-bar-fill" style="width:5.2%; background:oklch(0.78 0.16 75);"></div></div>
+                        </div>
+                        <div style="display:flex; flex-direction:column; gap:2px;">
+                            <div style="display:flex; justify-content:space-between; color:oklch(0.8 0.02 230);"><span>心肌梗死</span><span style="font-weight:700;">0.6%</span></div>
+                            <div class="progress-bar-bg" style="height:4px; background:oklch(0.3 0.08 230 / 30%);"><div class="progress-bar-fill" style="width:0.6%; background:oklch(0.7 0.16 155);"></div></div>
+                        </div>
+                        <div style="display:flex; flex-direction:column; gap:2px;">
+                            <div style="display:flex; justify-content:space-between; color:oklch(0.8 0.02 230);"><span>脑血管卒中</span><span style="font-weight:700;">3.8%</span></div>
+                            <div class="progress-bar-bg" style="height:4px; background:oklch(0.3 0.08 230 / 30%);"><div class="progress-bar-fill" style="width:3.8%; background:oklch(0.78 0.16 75);"></div></div>
+                        </div>
+                        <div style="display:flex; flex-direction:column; gap:2px;">
+                            <div style="display:flex; justify-content:space-between; color:oklch(0.8 0.02 230);"><span>冠心病发作</span><span style="font-weight:700;">1.2%</span></div>
+                            <div class="progress-bar-bg" style="height:4px; background:oklch(0.3 0.08 230 / 30%);"><div class="progress-bar-fill" style="width:1.2%; background:oklch(0.7 0.16 155);"></div></div>
+                        </div>
+                    </div>
+                </div>
             </div>
             
-            <h4 class="card-title" style="margin-bottom:8px; margin-top:12px;">在管医患关系与设备服务图谱 (数据脉冲流动)</h4>
-            <div class="canvas-wrapper">
-                <canvas id="relationshipCanvas" width="830" height="150"></canvas>
+            <!-- 3. 右栏：睡眠监测柱状图 & 运动时序步数 & 中医子午流注罗盘 -->
+            <div class="portrait-col">
+                <!-- 3.1 睡眠分析 -->
+                <div class="screen-glass-card" style="height:190px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid oklch(0.3 0.08 230 / 20%); padding-bottom: 6px;">
+                        <span style="font-size:13px; font-weight:800; color:#fff;">💤 睡眠深度时段监测</span>
+                        <span style="font-size:10.5px; color:oklch(0.7 0.02 230);">昨晚: 6.8h</span>
+                    </div>
+                    <div style="flex:1; position:relative;">
+                        <canvas id="residentSleepChart" style="width:100%; height:100%;"></canvas>
+                    </div>
+                </div>
+                
+                <!-- 3.2 运动分析 -->
+                <div class="screen-glass-card" style="height:190px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid oklch(0.3 0.08 230 / 20%); padding-bottom: 6px;">
+                        <span style="font-size:13px; font-weight:800; color:#fff;">🏃 今日运动时序步数</span>
+                        <span style="font-size:11px; color:var(--screen-accent); font-weight:800;" id="portrait-step-count">${r.steps.toLocaleString()} 步</span>
+                    </div>
+                    <div style="flex:1; position:relative;">
+                        <canvas id="residentSportChart" style="width:100%; height:100%;"></canvas>
+                    </div>
+                </div>
+                
+                <!-- 3.3 中医罗盘子午流注 -->
+                <div class="screen-glass-card" style="flex:1; justify-content:space-between;">
+                    <span class="title">☯ 子午流注经络罗盘</span>
+                    <div class="organ-clock-container">
+                        <!-- 子午流注发光表盘 -->
+                        <div class="organ-clock-dial">
+                            <div class="organ-clock-hand" id="organ-clock-hand-ptr"></div>
+                            <div class="organ-clock-center"></div>
+                            <span class="organ-clock-label" style="top: 8px; left: calc(50% - 6px);">心</span>
+                            <span class="organ-clock-label" style="top: calc(50% - 6px); right: 8px;">肺</span>
+                            <span class="organ-clock-label" style="bottom: 8px; left: calc(50% - 6px);">肾</span>
+                            <span class="organ-clock-label" style="top: calc(50% - 6px); left: 8px;">脾</span>
+                        </div>
+                        
+                        <!-- 器官虚证研判说明 -->
+                        <div class="organ-verdict-box">
+                            <div><strong style="color:var(--screen-accent);" id="organ-clock-time-title">午时 (心经)</strong></div>
+                            <div style="font-size:11px; color:oklch(0.8 0.02 230); margin-top:2px; line-height:1.45;" id="organ-clock-verdict-desc">
+                                加载子午流注研判中...
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     `;
     
     openModal("resident-portrait-modal");
     
+    // 渲染 Chart.js 趋势图表群并定位子午流注时辰
     requestAnimationFrame(() => {
         renderResidentTrendChart(portrait.trends);
-        startRelationshipAnimation(r);
+        renderResidentSleepChart();
+        renderResidentSportChart();
+        initOrganClock();
     });
 }
 
@@ -2205,6 +2352,7 @@ function renderWarningsRatioChart(ratio) {
 }
 
 // 居民详情 30 天体征图 (亮色 B端后台对齐)
+// 居民详情 30 天体征图 (亮色 B端后台对齐 - 重构科技深色版)
 function renderResidentTrendChart(trends) {
     const el = document.getElementById("residentTrendChart");
     if (!el) return;
@@ -2216,12 +2364,12 @@ function renderResidentTrendChart(trends) {
     
     // 创建冰蓝渐变填充区
     const hrGradient = ctx.createLinearGradient(0, 0, 0, 150);
-    hrGradient.addColorStop(0, 'rgba(73, 162, 249, 0.15)');
+    hrGradient.addColorStop(0, 'rgba(73, 162, 249, 0.25)');
     hrGradient.addColorStop(1, 'rgba(73, 162, 249, 0)');
     
     // 创建绯红渐变填充区
     const oxGradient = ctx.createLinearGradient(0, 0, 0, 150);
-    oxGradient.addColorStop(0, 'rgba(239, 68, 68, 0.15)');
+    oxGradient.addColorStop(0, 'rgba(239, 68, 68, 0.2)');
     oxGradient.addColorStop(1, 'rgba(239, 68, 68, 0)');
     
     state.charts.residentTrend = new Chart(ctx, {
@@ -2230,23 +2378,25 @@ function renderResidentTrendChart(trends) {
             labels: trends.labels,
             datasets: [
                 {
-                    label: '实时心率波动(bpm)',
+                    label: '心率(bpm)',
                     data: trends.heart_rate,
                     borderColor: '#49a2f9',
                     backgroundColor: hrGradient,
                     fill: true,
                     borderWidth: 2,
-                    tension: 0.3,
+                    tension: 0.4,
+                    pointRadius: 0,
                     yAxisID: 'y'
                 },
                 {
-                    label: '血氧饱和度(%)',
+                    label: '血氧(%)',
                     data: trends.blood_oxygen,
                     borderColor: '#ef4444',
                     backgroundColor: oxGradient,
                     fill: true,
                     borderWidth: 2,
-                    tension: 0.3,
+                    tension: 0.4,
+                    pointRadius: 0,
                     yAxisID: 'y1'
                 }
             ]
@@ -2255,15 +2405,139 @@ function renderResidentTrendChart(trends) {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { labels: { color: '#64748b', font: { size: 10 } } }
+                legend: { display: false } // 大屏端隐藏图例，由标题自解释
             },
             scales: {
-                x: { grid: { color: 'rgba(148, 163, 184, 0.12)' }, ticks: { color: '#64748b', font: { size: 9 } } },
-                y: { position: 'left', grid: { color: 'rgba(148, 163, 184, 0.12)' }, ticks: { color: '#64748b', font: { size: 9 } } },
-                y1: { position: 'right', grid: { drawOnChartArea: false }, ticks: { color: '#64748b', font: { size: 9 } } }
+                x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: 'oklch(0.7 0.02 230)', font: { size: 9 } } },
+                y: { position: 'left', grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: 'oklch(0.7 0.02 230)', font: { size: 9 } } },
+                y1: { position: 'right', grid: { drawOnChartArea: false }, ticks: { color: 'oklch(0.7 0.02 230)', font: { size: 9 } } }
             }
         }
     });
+}
+
+// 渲染深浅睡眠监控柱状图
+function renderResidentSleepChart() {
+    const el = document.getElementById("residentSleepChart");
+    if (!el) return;
+    
+    destroyChart("residentSleep");
+    
+    const ctx = el.getContext("2d");
+    if (!ctx) return;
+    
+    state.charts.residentSleep = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['22:00', '00:00', '02:00', '04:00', '06:00'],
+            datasets: [
+                {
+                    label: '深睡',
+                    data: [1.2, 1.8, 1.5, 2.0, 0.5],
+                    backgroundColor: 'oklch(0.7 0.16 155)', // 绿色
+                    borderRadius: 3
+                },
+                {
+                    label: '浅睡',
+                    data: [2.5, 1.5, 2.2, 1.8, 2.1],
+                    backgroundColor: 'oklch(0.55 0.13 195)', // 蓝色
+                    borderRadius: 3
+                },
+                {
+                    label: '清醒',
+                    data: [0.3, 0.1, 0.2, 0.0, 0.4],
+                    backgroundColor: 'oklch(0.78 0.16 75)', // 黄色
+                    borderRadius: 3
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                x: { stacked: true, grid: { display: false }, ticks: { color: 'oklch(0.7 0.02 230)', font: { size: 9 } } },
+                y: { stacked: true, grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: 'oklch(0.7 0.02 230)', font: { size: 9 } } }
+            }
+        }
+    });
+}
+
+// 渲染今日运动步数监测柱状图
+function renderResidentSportChart() {
+    const el = document.getElementById("residentSportChart");
+    if (!el) return;
+    
+    destroyChart("residentSport");
+    
+    const ctx = el.getContext("2d");
+    if (!ctx) return;
+    
+    state.charts.residentSport = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00'],
+            datasets: [{
+                data: [420, 850, 1200, 310, 680, 1500, 480],
+                backgroundColor: 'rgba(73, 162, 249, 0.75)',
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                x: { grid: { display: false }, ticks: { color: 'oklch(0.7 0.02 230)', font: { size: 9 } } },
+                y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: 'oklch(0.7 0.02 230)', font: { size: 9 } } }
+            }
+        }
+    });
+}
+
+// ☯ 初始化中医经络子午流注罗盘及研判
+function initOrganClock() {
+    const hand = document.getElementById("organ-clock-hand-ptr");
+    const titleEl = document.getElementById("organ-clock-time-title");
+    const descEl = document.getElementById("organ-clock-verdict-desc");
+    
+    if (!hand) return;
+    
+    // 获取当前系统的实际小时数
+    const now = new Date();
+    const hrs = now.getHours();
+    
+    // 子午流注指针偏转角
+    // 24小时分为12个时辰，每2小时一个刻度，一个时辰占罗盘的 30 度
+    const angle = ((hrs / 24) * 360) + 180; // 加 180 做表盘朝上的对齐校准
+    hand.style.transform = `rotate(${angle}deg)`;
+    
+    // 中医子午流注时辰、值日器官与虚证实证诊断信息
+    const organDetails = [
+        { name: "子时 (23:00-01:00) 胆经值日", desc: "气血注于胆。胆汁推陈出新。胆虚则易惊、多疑、偏头痛。建议熟睡以养胆气。" },
+        { name: "丑时 (01:00-03:00) 肝经值日", desc: "气血注于肝。肝藏血排毒。肝虚则目涩眼花、多梦易醒。此阶段必须深度睡眠以利血液归肝。" },
+        { name: "寅时 (03:00-05:00) 肺经值日", desc: "气血注于肺。肺朝百脉，分配气血。肺虚则气短、清晨易咳。此时宜保持呼吸平缓深睡。" },
+        { name: "卯时 (05:00-07:00) 大肠经值日", desc: "气血流注大肠。大肠虚则腹痛、便溏或便秘。宜起床空腹饮温水，促进大肠排毒排便。" },
+        { name: "辰时 (07:00-09:00) 胃经值日", desc: "气血注于胃。胃虚则消化不良、纳差。此时为胃经最旺时间，必须进食高营养早餐以运化身体。" },
+        { name: "巳时 (09:00-11:00) 脾经值日", desc: "气血注于脾。脾主运化精微。脾虚则神疲乏力、餐后易困、腹胀。此时宜处理高效脑力工作。" },
+        { name: "午时 (11:00-13:00) 心经值日", desc: "气血流注心经。心虚则心悸、失眠、神志不宁。宜午睡 15-30 分钟，以静养心神，补足心气。" },
+        { name: "未时 (13:00-15:00) 小肠经值日", desc: "小肠分清泌浊。小肠虚则腹胀、易便秘、口干舌燥、肩背沉重酸痛。建议多饮水利于代谢。" },
+        { name: "申时 (15:00-17:00) 膀胱经值日", desc: "气血注于膀胱。膀胱经运行排毒。膀胱虚则小便异常、腰痛。此时为第二个学习工作高峰，应多喝水。" },
+        { name: "酉时 (17:00-19:00) 肾经值日", desc: "气血流注肾经。肾藏精气。肾虚则腰膝酸软、潮热盗汗。此时气血收敛，宜保持情绪安静平稳。" },
+        { name: "戌时 (19:00-21:00) 心包经值日", desc: "气血注于心包。保护心脏免受外邪。心包虚则胸闷、心烦。宜保持情绪愉悦舒缓，进行散步。" },
+        { name: "亥时 (21:00-23:00) 三焦经值日", desc: "三焦通百脉。气血流注三焦。三焦虚则畏寒、免疫力差。此时人体百脉修整，建议准备入睡。" }
+    ];
+    
+    // 定位当前的 2 小时时段
+    const idx = Math.floor(hrs / 2) % 12;
+    const current = organDetails[idx];
+    
+    if (titleEl) titleEl.textContent = current.name;
+    if (descEl) descEl.textContent = current.desc;
 }
 
 // ==================== 6. 重构版新增模块交互与弹窗函数 ====================

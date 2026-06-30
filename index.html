@@ -1124,15 +1124,17 @@
         </div>
     </div>
     
-    <!-- 模态框 2：居民健康画像弹窗 (超宽弹窗) -->
-    <div class="modal modal-lg" id="resident-portrait-modal">
-        <div class="modal-dialog">
-            <div class="modal-header">
-                <h3 class="modal-title" id="res-portrait-title">在管居民健康档案与大数据画像</h3>
-                <span class="modal-close" data-close="resident-portrait-modal">&times;</span>
+    <!-- 模态框 2：居民健康画像弹窗 (全深色生理数字人大屏弹窗) -->
+    <div class="modal modal-lg screen-theme-modal" id="resident-portrait-modal">
+        <div class="modal-dialog" style="max-width: 1260px; width: 96vw; background: oklch(0.12 0.03 230); color: oklch(0.95 0.01 230); border: 1.5px solid oklch(0.3 0.08 230 / 40%); box-shadow: 0 0 30px oklch(0.55 0.13 195 / 20%); border-radius: var(--semi-border-radius-xl);">
+            <div class="modal-header" style="border-bottom: 1px solid oklch(0.3 0.08 230 / 30%); padding-bottom: 12px; margin-bottom: 0;">
+                <h3 class="modal-title" id="res-portrait-title" style="color: oklch(0.95 0.01 230); font-weight: 800; font-size:16px; letter-spacing: 0.1em; display: flex; align-items: center; gap: 8px;">
+                    <span style="color: var(--screen-accent);">🧬</span> 生理数字人模型与主动健康档案
+                </h3>
+                <span class="modal-close" data-close="resident-portrait-modal" style="color: oklch(0.6 0.02 230); cursor:pointer;">&times;</span>
             </div>
-            <div class="modal-body" id="res-portrait-modal-body">
-                <!-- JS 动态注入画像图表 -->
+            <div class="modal-body" id="res-portrait-modal-body" style="padding: 18px 24px; background: oklch(0.12 0.03 230);">
+                <!-- 由 JS 动态注入高科技生理三栏页面 -->
             </div>
         </div>
     </div>
