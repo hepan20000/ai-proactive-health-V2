@@ -2,7 +2,7 @@
    主动健康管理机构端 - 纯 JS 前端逻辑与数据联动中心 (UI/UX Pro Max 级重构)
    ========================================================================== */
 
-const API_BASE = "http://localhost:8080/api";
+const API_BASE = "/api";
 
 // 莫兰迪圆形发光正式头像生成函数 (Anti-Q-Style Avatar)
 function getFormalAvatar(gender, age, name) {
