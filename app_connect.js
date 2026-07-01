@@ -1349,361 +1349,1217 @@ async function openResidentModal(id) {
     const portrait = await request(`/residents/portrait?id=${id}`);
     const r = portrait.resident;
     
-    // 对姓名及手机号进行脱敏显示 (对齐设计图)
-    const maskedName = r.name.length > 2 ? r.name[0] + "****" + r.name[r.name.length - 1] : r.name[0] + "****";
+    // 对姓名及手机号进行脱敏显示 (对齐 Loveable 大屏设计规范)
+    const maskedName = r.name.length > 2 ? r.name[0] + "*" + r.name[r.name.length - 1] : r.name[0] + "*";
     const maskedPhone = r.phone.replace(/(\d{3})\d{4}(\d{4})/, "$1****$2");
     
     // 动态计算 BMI
     const bmiVal = r.bmi || (r.weight ? (r.weight / Math.pow((r.height || 170)/100, 2)).toFixed(2) : "23.88");
     
-    // 动态判定健康星级
-    let stars = "★★★☆☆";
+    // 动态判定健康星级与状态词
     let healthLabel = "亚健康";
     if (r.health_level === "red") {
-        stars = "★☆☆☆☆";
-        healthLabel = "高危红警";
+        healthLabel = "风险";
     } else if (r.health_level === "yellow") {
-        stars = "★★★☆☆";
         healthLabel = "亚健康";
     } else {
-        stars = "★★★★★";
         healthLabel = "健康";
     }
     
     const container = document.getElementById("res-portrait-modal-body");
     if (!container) return;
     
+    // 1. 组装 Loveable 大屏专属 HTML 骨架
     container.innerHTML = `
         <div class="portrait-screen-wrapper">
-            <!-- 1. 顶部操作栏 -->
-            <div class="portrait-screen-header">
-                <div class="portrait-header-left">
-                    <span class="back-btn" data-close="resident-portrait-modal">← 返回</span>
-                    <span>|</span>
-                    <span>北京时间：<span id="portrait-clock-time">加载中...</span></span>
-                </div>
-                <div class="portrait-header-title">居 民 健 康 画 像</div>
-                <div class="portrait-header-right" data-close="resident-portrait-modal" style="font-size:16px;">⏻</div>
-            </div>
-            
-            <!-- 2. 第一排：上排三栏大卡片 -->
-            <div class="portrait-row-top">
-                <!-- 2.1 上左卡片：个人信息 + 实时体征 + 血脂四项 -->
-                <div class="screen-glass-card">
-                    <!-- 基本资料 -->
-                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(0,240,255,0.15); padding-bottom:8px; margin-bottom:4px;">
-                        <div style="display:flex; align-items:center; gap:8px;">
-                            ${getFormalAvatar(r.gender, r.age, r.name)}
-                            <div style="display:flex; flex-direction:column; gap:2px;">
-                                <span style="font-weight:800; font-size:13.5px; color:#fff;">${maskedName}</span>
-                                <span style="font-size:9.5px; color:rgba(255,255,255,0.5);">手机号 ${maskedPhone}</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- 四格横排指标 -->
-                    <div class="vitals-base-info-row">
-                        <div class="vitals-base-info-block"><div class="label">性别</div><div class="value">${r.gender}</div></div>
-                        <div class="vitals-base-info-block"><div class="label">身高</div><div class="value">${r.height || 170}cm</div></div>
-                        <div class="vitals-base-info-block"><div class="label">体重</div><div class="value">${r.weight || 69}kg</div></div>
-                        <div class="vitals-base-info-block"><div class="label">BMI</div><div class="value">${bmiVal}</div></div>
-                    </div>
-                    
-                    <!-- 7 大核心体征 -->
-                    <div class="portrait-vitals-grid-v2" style="margin-top:4px;">
-                        <div class="vital-tile-card">
-                            <div class="vital-tile-header"><span>心率</span><span class="status-dot-pulse green"></span></div>
-                            <div class="vital-tile-val">${r.heart_rate}<span class="unit">次/分</span></div>
-                            <div style="font-size:8px; color:rgba(255,255,255,0.3); text-align:right;">13:52</div>
-                        </div>
-                        <div class="vital-tile-card">
-                            <div class="vital-tile-header"><span>血氧</span><span class="status-dot-pulse green"></span></div>
-                            <div class="vital-tile-val">${r.blood_oxygen}<span class="unit">%</span></div>
-                            <div style="font-size:8px; color:rgba(255,255,255,0.3); text-align:right;">13:52</div>
-                        </div>
-                        <div class="vital-tile-card">
-                            <div class="vital-tile-header"><span>呼吸率</span><span class="status-dot-pulse green"></span></div>
-                            <div class="vital-tile-val">19<span class="unit">次/分</span></div>
-                            <div style="font-size:8px; color:rgba(255,255,255,0.3); text-align:right;">13:52</div>
-                        </div>
-                        <div class="vital-tile-card">
-                            <div class="vital-tile-header"><span>体温</span><span class="status-dot-pulse green"></span></div>
-                            <div class="vital-tile-val">36.5<span class="unit">℃</span></div>
-                            <div style="font-size:8px; color:rgba(255,255,255,0.3); text-align:right;">13:59</div>
-                        </div>
-                        <div class="vital-tile-card" style="grid-column: span 2;">
-                            <div class="vital-tile-header"><span>血压</span><span class="status-dot-pulse ${r.health_level === 'red' ? 'red' : 'green'}"></span></div>
-                            <div class="vital-tile-val" style="font-size:18px;">${r.blood_pressure}<span class="unit">mmHg</span></div>
-                            <div style="font-size:8px; color:rgba(255,255,255,0.3); text-align:right;">13:52</div>
-                        </div>
-                        <div class="vital-tile-card">
-                            <div class="vital-tile-header"><span>尿酸</span><span class="status-dot-pulse yellow"></span></div>
-                            <div class="vital-tile-val" style="color:#f59e0b;">423<span class="unit">µmol/L</span></div>
-                            <div style="font-size:8px; color:rgba(255,255,255,0.3); text-align:right;">07:00</div>
-                        </div>
-                        <div class="vital-tile-card">
-                            <div class="vital-tile-header"><span>血糖</span><span class="status-dot-pulse green"></span></div>
-                            <div class="vital-tile-val">5.4<span class="unit">mmol/L</span></div>
-                            <div style="font-size:8px; color:rgba(255,255,255,0.3); text-align:right;">21:00</div>
-                        </div>
-                    </div>
-                    
-                    <!-- 血脂四项 -->
-                    <div style="margin-top:6px;">
-                        <div style="font-size:10px; color:rgba(255,255,255,0.4); margin-bottom:4px; font-weight:700;">血脂四项</div>
-                        <div class="lipid-profile-container">
-                            <div class="lipid-item"><span>总胆固醇</span><span class="lipid-badge green">正常 4.33</span></div>
-                            <div class="lipid-item"><span>甘油三酯</span><span class="lipid-badge yellow">偏高 2.46</span></div>
-                            <div class="lipid-item"><span>高密度蛋白</span><span class="lipid-badge yellow">偏低 0.92</span></div>
-                            <div class="lipid-item"><span>低密度蛋白</span><span class="lipid-badge green">正常 2.28</span></div>
-                        </div>
-                    </div>
-                </div>
+            <div class="large-screen-container">
                 
-                <!-- 2.2 上中卡片：全息数字人 (环绕 10 个健康标签气泡) -->
-                <div class="screen-glass-card" style="padding:14px 10px;">
-                    <div class="card-title">
-                        <span>生理数字人模型</span>
-                        <span style="font-size:9.5px; font-weight:normal; color:rgba(255,255,255,0.5);">综合健康标签 · 实时映射</span>
+                <!-- 顶层标题栏 (Top Header) -->
+                <header class="top-header">
+                    <div class="header-left">
+                        <span class="status-indicator">
+                            <span class="pulse-dot"></span>
+                            SYSTEM ACTIVE
+                        </span>
+                        <span class="time-stamp" id="headerTime">加载中...</span>
                     </div>
                     
-                    <!-- 全息人体图表区 -->
-                    <div class="hologram-stage">
-                        <img src="mock_assets/glowing_human.png" class="human-hologram-img">
-                        <div class="hologram-stage-base"></div>
-                        
-                        <!-- 环绕 10 个健康气泡标签 (带引线浮动) -->
-                        <div class="hologram-bubble yellow bubble-pos-l1">● 睡眠不足</div>
-                        <div class="hologram-bubble blue bubble-pos-l2">● 高血脂</div>
-                        <div class="hologram-bubble blue bubble-pos-l3">● 高血脂</div>
-                        <div class="hologram-bubble green bubble-pos-l4">✓ 正常体重</div>
-                        <div class="hologram-bubble green bubble-pos-l5">✓ 正常血压</div>
-                        
-                        <div class="hologram-bubble yellow bubble-pos-r1">● 异常血脂</div>
-                        <div class="hologram-bubble blue bubble-pos-r2">● 高血压</div>
-                        <div class="hologram-bubble blue bubble-pos-r3">● 高血压</div>
-                        <div class="hologram-bubble green bubble-pos-r4">✓ 正常心率</div>
-                        <div class="hologram-bubble green bubble-pos-r5">✓ 正常尿酸</div>
+                    <div class="header-center">
+                        <h1 class="main-title">居民健康画像</h1>
+                        <div class="title-subtext">Active Health Digital Twin</div>
                     </div>
                     
-                    <!-- 24 小时健康评估 -->
-                    <div style="text-align:center; padding-top:6px; border-top:1px dashed rgba(0,240,255,0.15);">
-                        <span style="font-size:13.5px; font-weight:800; color:#f59e0b; text-shadow:0 0 10px rgba(245,158,11,0.4);">
-                            24 小时健康评估：${healthLabel} <span style="letter-spacing:1px; margin-left:4px;">${stars}</span>
+                    <div class="header-right">
+                        <span class="back-portal-btn" style="cursor:pointer;" data-close="resident-portrait-modal">
+                            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+                            返回工作台
                         </span>
                     </div>
-                </div>
-                
-                <!-- 2.3 上右卡片：睡眠分析 + 运动分析 -->
-                <div class="screen-glass-card" style="justify-content: space-between;">
-                    <!-- 睡眠分析 -->
-                    <div style="display:flex; flex-direction:column; gap:4px; height:49%;">
-                        <div class="card-title">
-                            <span>睡眠分析</span>
-                            <span style="font-size:10px; font-weight:normal; color:rgba(255,255,255,0.4);">入睡 03:22 · 起床 06:04</span>
-                        </div>
-                        <div style="display:flex; justify-content:space-between; font-size:10px; color:rgba(255,255,255,0.5); padding:0 2px;">
-                            <span>总睡眠 <strong style="color:#00f0ff;">2h 42m</strong></span>
-                            <span>深睡 <strong style="color:#10b981;">1h 40m</strong></span>
-                            <span>浅睡 <strong style="color:#f59e0b;">1h 02m</strong></span>
-                        </div>
-                        <div style="flex:1; position:relative; min-height:100px;">
-                            <canvas id="residentSleepChart" style="width:100%; height:100%;"></canvas>
-                        </div>
-                    </div>
+                </header>
+        
+                <!-- 主体三栏布局 -->
+                <main class="dashboard-grid">
                     
-                    <!-- 运动分析 -->
-                    <div style="display:flex; flex-direction:column; gap:4px; height:49%; border-top:1px dashed rgba(0,240,255,0.15); padding-top:10px;">
-                        <div class="card-title">
-                            <span>运动分析</span>
-                            <span style="font-size:10px; font-weight:normal; color:rgba(255,255,255,0.4);">今日 · 每小时步数</span>
-                        </div>
-                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:10.5px; color:rgba(255,255,255,0.5); padding:0 2px;">
-                            <span>小时时序监测</span>
-                            <span style="font-size:11.5px; font-weight:800; color:#00f0ff;">总步数 5,247</span>
-                        </div>
-                        <div style="flex:1; position:relative; min-height:100px;">
-                            <canvas id="residentSportChart" style="width:100%; height:100%;"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- 3. 第二排：下排三栏等宽卡片 -->
-            <div class="portrait-row-bottom">
-                <!-- 3.1 下左卡片：生理趋势折线 (含指标 Tab 切换) -->
-                <div class="screen-glass-card">
-                    <div class="card-title" style="margin-bottom:6px;">
-                        <span>用户生理数据</span>
-                        <ul class="trend-tab-list">
-                            <li class="trend-tab-item active" data-type="heart">心率</li>
-                            <li class="trend-tab-item" data-type="oxygen">血氧</li>
-                            <li class="trend-tab-item" data-type="breath">呼吸率</li>
-                            <li class="trend-tab-item" data-type="temp">体温</li>
-                            <li class="trend-tab-item" data-type="pressure">血压</li>
-                            <li class="trend-tab-item" data-type="sugar">血糖</li>
-                        </ul>
-                    </div>
-                    <div style="font-size:9.5px; color:rgba(255,255,255,0.4); margin-bottom:4px;" id="portrait-trend-subtitle">心率 - 24h 趋势</div>
-                    <div style="flex:1; position:relative; min-height:120px;">
-                        <canvas id="residentTrendChart" style="width:100%; height:100%;"></canvas>
-                    </div>
-                </div>
-                
-                <!-- 3.2 下中卡片：未来一个月疾病风险概率 AI 模型预测 -->
-                <div class="screen-glass-card">
-                    <div class="card-title">
-                        <span>未来一个月疾病风险概率</span>
-                        <span style="font-size:9px; font-weight:normal; color:rgba(255,255,255,0.45);">AI 模型预测</span>
-                    </div>
-                    
-                    <div class="disease-risk-grid">
-                        <div class="disease-risk-item">
-                            <div class="disease-risk-header"><span>房颤</span><span>0%</span></div>
-                            <div class="disease-risk-bar-bg"><div class="disease-risk-bar-fill cyan" style="width:0%;"></div></div>
-                        </div>
-                        <div class="disease-risk-item">
-                            <div class="disease-risk-header"><span>心力衰竭</span><span>0%</span></div>
-                            <div class="disease-risk-bar-bg"><div class="disease-risk-bar-fill cyan" style="width:0%;"></div></div>
-                        </div>
-                        <div class="disease-risk-item">
-                            <div class="disease-risk-header"><span>冠心病</span><span>0%</span></div>
-                            <div class="disease-risk-bar-bg"><div class="disease-risk-bar-fill cyan" style="width:0%;"></div></div>
-                        </div>
-                        <div class="disease-risk-item">
-                            <div class="disease-risk-header" style="color:#ef4444; font-weight:700;"><span>心动过速</span><span>5.2%</span></div>
-                            <div class="disease-risk-bar-bg"><div class="disease-risk-bar-fill red" style="width:5.2%;"></div></div>
-                        </div>
-                        <div class="disease-risk-item">
-                            <div class="disease-risk-header"><span>心动过慢</span><span>0.1%</span></div>
-                            <div class="disease-risk-bar-bg"><div class="disease-risk-bar-fill cyan" style="width:1%;"></div></div>
-                        </div>
-                        <div class="disease-risk-item">
-                            <div class="disease-risk-header"><span>心梗</span><span>0.6%</span></div>
-                            <div class="disease-risk-bar-bg"><div class="disease-risk-bar-fill cyan" style="width:6%;"></div></div>
-                        </div>
-                        <div class="disease-risk-item">
-                            <div class="disease-risk-header" style="color:#f59e0b; font-weight:700;"><span>脑卒中</span><span>1.8%</span></div>
-                            <div class="disease-risk-bar-bg"><div class="disease-risk-bar-fill yellow" style="width:18%;"></div></div>
-                        </div>
-                        <div class="disease-risk-item">
-                            <div class="disease-risk-header" style="color:#f59e0b; font-weight:700;"><span>糖尿病</span><span>3.4%</span></div>
-                            <div class="disease-risk-bar-bg"><div class="disease-risk-bar-fill yellow" style="width:34%;"></div></div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- 3.3 下右卡片：中医器官分析 · 子午流注 (12 经络表盘) -->
-                <div class="screen-glass-card" style="flex-direction:row; gap:16px; align-items:center;">
-                    <!-- 十二经络圆形大罗盘 -->
-                    <div class="organ-radial-clock">
-                        <div class="organ-radial-pointer" id="organ-clock-hand-ptr"></div>
-                        <div class="organ-radial-center"></div>
-                        <!-- 12 经络标签 -->
-                        <span class="organ-radial-label" id="lbl-organ-xin" style="top: 2px; left: calc(50% - 8px);">心</span>
-                        <span class="organ-radial-label" id="lbl-organ-xiaochang" style="top: 10px; right: 28px;">小肠</span>
-                        <span class="organ-radial-label" id="lbl-organ-pangguang" style="top: 28px; right: 10px;">膀胱</span>
-                        <span class="organ-radial-label" id="lbl-organ-shen" style="top: calc(50% - 8px); right: 2px;">肾</span>
-                        <span class="organ-radial-label" id="lbl-organ-xinbao" style="bottom: 28px; right: 10px;">心包</span>
-                        <span class="organ-radial-label" id="lbl-organ-sanjiao" style="bottom: 10px; right: 28px;">三焦</span>
-                        <span class="organ-radial-label" id="lbl-organ-dan" style="bottom: 2px; left: calc(50% - 8px);">胆</span>
-                        <span class="organ-radial-label" id="lbl-organ-gan" style="bottom: 10px; left: 28px;">肝</span>
-                        <span class="organ-radial-label" id="lbl-organ-fei" style="bottom: 28px; left: 10px;">肺</span>
-                        <span class="organ-radial-label" id="lbl-organ-dachang" style="top: calc(50% - 8px); left: 2px;">大肠</span>
-                        <span class="organ-radial-label" id="lbl-organ-wei" style="top: 28px; left: 10px;">胃</span>
-                        <span class="organ-radial-label" id="lbl-organ-pi" style="top: 10px; left: 28px;">脾</span>
-                    </div>
-                    
-                    <!-- 器官研判文案栏 -->
-                    <div class="organ-verdict-column">
-                        <div class="organ-verdict-title-bar">
-                            <span>器官分析 · 子午流注</span>
-                        </div>
-                        <div style="font-size:11.5px; font-weight:800; color:#00f0ff;" id="organ-clock-time-title">未时 13:00 - 15:00 · 小肠经</div>
-                        <div style="max-height:125px; overflow-y:auto; padding-right:2px; display:flex; flex-direction:column; gap:4px;">
-                            <div style="font-size:10px; line-height:1.4;" id="organ-clock-verdict-desc">
-                                <!-- 动态填入虚证实证调理 -->
+                    <!-- ==================== 左侧栏 ==================== -->
+                    <section class="left-section">
+                        
+                        <!-- 用户核心资料 (User Profiles) -->
+                        <div class="cyber-panel clip-topLeft" id="panel-profile">
+                            <div class="panel-border"></div>
+                            <div class="panel-header-bar">
+                                <span class="panel-icon">👤</span>
+                                <h2 class="panel-title">用户核心资料</h2>
+                                <span class="panel-tag cyan-tag">档案已同步</span>
+                            </div>
+                            <div class="panel-body">
+                                <div class="profile-grid">
+                                    <div class="profile-item">
+                                        <span class="profile-label">用户名</span>
+                                        <span class="profile-val" id="profile-name">${maskedName}</span>
+                                    </div>
+                                    <div class="profile-item">
+                                        <span class="profile-label">手机号</span>
+                                        <span class="profile-val" id="profile-phone">${maskedPhone}</span>
+                                    </div>
+                                    <div class="profile-item">
+                                        <span class="profile-label">性别</span>
+                                        <span class="profile-val" id="profile-gender">${r.gender}</span>
+                                    </div>
+                                    <div class="profile-item">
+                                        <span class="profile-label">身高</span>
+                                        <span class="profile-val" id="profile-height">${r.height || 170}cm</span>
+                                    </div>
+                                    <div class="profile-item">
+                                        <span class="profile-label">体重</span>
+                                        <span class="profile-val" id="profile-weight">${r.weight || 69}kg</span>
+                                    </div>
+                                    <div class="profile-item">
+                                        <span class="profile-label">BMI</span>
+                                        <span class="profile-val" id="profile-bmi">${bmiVal}</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </div>
+        
+                        <!-- 实时生理体征数据 (Real-time Physiological Vitals) -->
+                        <div class="cyber-panel" id="panel-vitals">
+                            <div class="panel-border"></div>
+                            <div class="panel-header-bar">
+                                <span class="panel-icon">⌚</span>
+                                <h2 class="panel-title">实时生理体征</h2>
+                                <span class="panel-tag pulse-tag">体征监测中</span>
+                            </div>
+                            <div class="panel-body flex-col gap-10">
+                                <!-- 心率 -->
+                                <div class="vital-card border-heart">
+                                    <div class="vital-icon-box bg-heart">
+                                        <svg class="icon-pulse" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                                    </div>
+                                    <div class="vital-content">
+                                        <div class="vital-row">
+                                            <span class="vital-label">实时心率</span>
+                                            <span class="vital-status" id="vital-heart-status">正常</span>
+                                        </div>
+                                        <div class="vital-row-data">
+                                            <span class="vital-number text-neon-cyan" id="vital-heart-value">--</span>
+                                            <span class="vital-unit">次/分</span>
+                                        </div>
+                                        <div class="vital-time" id="vital-heart-time">更新时间: --</div>
+                                    </div>
+                                </div>
+        
+                                <!-- 血氧 -->
+                                <div class="vital-card border-o2">
+                                    <div class="vital-icon-box bg-o2">
+                                        <svg viewBox="0 0 24 24"><path d="M19.07 4.93C17.22 3.08 14.66 2 12 2S6.78 3.08 4.93 4.93C3.08 6.78 2 9.34 2 12c0 2.66 1.08 5.22 2.93 7.07l1.41-1.41C4.94 16.27 4.2 14.21 4.2 12c0-2.21.74-4.27 2.14-5.66l-1.41-1.41zm-2.82 2.82C15.15 6.66 13.63 6 12 6s-3.15.66-4.24 1.76l1.41 1.41C10.05 8.41 10.98 8 12 8s1.95.41 2.83 1.17l1.42-1.42zM12 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+                                    </div>
+                                    <div class="vital-content">
+                                        <div class="vital-row">
+                                            <span class="vital-label">血氧饱和度</span>
+                                            <span class="vital-status" id="vital-o2-status">正常</span>
+                                        </div>
+                                        <div class="vital-row-data">
+                                            <span class="vital-number text-neon-cyan" id="vital-o2-value">--</span>
+                                            <span class="vital-unit">%</span>
+                                        </div>
+                                        <div class="vital-time" id="vital-o2-time">更新时间: --</div>
+                                    </div>
+                                </div>
+        
+                                <!-- 睡眠时长 -->
+                                <div class="vital-card border-sleep">
+                                    <div class="vital-icon-box bg-sleep">
+                                        <svg viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/></svg>
+                                    </div>
+                                    <div class="vital-content">
+                                        <div class="vital-row">
+                                            <span class="vital-label">睡眠时长</span>
+                                            <span class="vital-status" id="vital-sleep-status">睡眠不足</span>
+                                        </div>
+                                        <div class="vital-row-data">
+                                            <span class="vital-number text-neon-yellow" id="vital-sleep-value">--</span>
+                                            <span class="vital-unit">小时</span>
+                                        </div>
+                                        <div class="vital-time" id="vital-sleep-time">今日起床: 06:04</div>
+                                    </div>
+                                </div>
+        
+                                <!-- 血压 -->
+                                <div class="vital-card border-bp">
+                                    <div class="vital-icon-box bg-bp">
+                                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.04-.42 1.99-1.07 2.75z"/></svg>
+                                    </div>
+                                    <div class="vital-content">
+                                        <div class="vital-row">
+                                            <span class="vital-label">血压状况</span>
+                                            <span class="vital-status" id="vital-bp-status">正常</span>
+                                        </div>
+                                        <div class="vital-row-data">
+                                            <span class="vital-number text-neon-cyan" id="vital-bp-value">--</span>
+                                            <span class="vital-unit">mmHg</span>
+                                        </div>
+                                        <div class="vital-time" id="vital-bp-time">更新时间: --</div>
+                                    </div>
+                                </div>
+        
+                                <!-- 步数 -->
+                                <div class="vital-card border-step">
+                                    <div class="vital-icon-box bg-step">
+                                        <svg viewBox="0 0 24 24"><path d="M13.5 5.5c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zM9.8 8.9L7 23h2.1l1.8-8 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-2.2 0-3.9-1.2-4.7-3l-1-2.4c-.4-1-1.4-1.7-2.6-1.7-1.1 0-2.1.6-2.6 1.5L4 14.1v5.9h2v-4.9l2.2-2.2L9.8 8.9z"/></svg>
+                                    </div>
+                                    <div class="vital-content">
+                                        <div class="vital-row">
+                                            <span class="vital-label">今日步数</span>
+                                            <span class="vital-status text-neon-green" id="vital-step-status">达标</span>
+                                        </div>
+                                        <div class="vital-row-data">
+                                            <span class="vital-number text-neon-cyan" id="vital-step-value">--</span>
+                                            <span class="vital-unit">步</span>
+                                        </div>
+                                        <div class="vital-time" id="vital-step-time">监测时间: 24h连续</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+        
+                        <!-- 生理指标变化趋势 (SVG折线图) -->
+                        <div class="cyber-panel clip-bottomLeft" id="panel-trends">
+                            <div class="panel-border"></div>
+                            <div class="panel-header-bar">
+                                <span class="panel-icon">📈</span>
+                                <h2 class="panel-title">生理指标变化趋势</h2>
+                            </div>
+                            <div class="panel-body">
+                                <div class="trends-tab-group">
+                                    <button class="trend-tab active" data-type="heart">心率</button>
+                                    <button class="trend-tab" data-type="o2">血氧</button>
+                                    <button class="trend-tab" data-type="sleep">睡眠</button>
+                                    <button class="trend-tab" data-type="bp">血压</button>
+                                    <button class="trend-tab" data-type="step">步数</button>
+                                </div>
+                                
+                                <div class="trend-chart-wrapper">
+                                    <svg class="trend-chart-svg" id="trendChart" viewBox="0 0 400 160">
+                                        <!-- 网格线 -->
+                                        <line x1="40" y1="20" x2="380" y2="20" class="chart-grid-line" />
+                                        <line x1="40" y1="55" x2="380" y2="55" class="chart-grid-line" />
+                                        <line x1="40" y1="90" x2="380" y2="90" class="chart-grid-line" />
+                                        <line x1="40" y1="125" x2="380" y2="125" class="chart-grid-line" />
+                                        <line x1="40" y1="135" x2="380" y2="135" class="chart-axis-line" />
+                                        <line x1="40" y1="20" x2="40" y2="135" class="chart-axis-line" />
+                                        
+                                        <!-- Y轴刻度文字 -->
+                                        <text x="32" y="24" class="chart-text y-label-1">140</text>
+                                        <text x="32" y="59" class="chart-text y-label-2">105</text>
+                                        <text x="32" y="94" class="chart-text y-label-3">70</text>
+                                        <text x="32" y="129" class="chart-text y-label-4">35</text>
+                                        <text x="32" y="139" class="chart-text">0</text>
+                                        
+                                        <!-- X轴刻度文字 -->
+                                        <text x="40" y="152" class="chart-text text-start">14:01</text>
+                                        <text x="125" y="152" class="chart-text text-middle">20:00</text>
+                                        <text x="210" y="152" class="chart-text text-middle">02:00</text>
+                                        <text x="295" y="152" class="chart-text text-middle">08:00</text>
+                                        <text x="380" y="152" class="chart-text text-end">13:52</text>
+                                        
+                                        <defs>
+                                            <linearGradient id="chartGlowGrad" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="0%" stop-color="rgba(0, 240, 255, 0.4)" />
+                                                <stop offset="100%" stop-color="rgba(0, 240, 255, 0)" />
+                                            </linearGradient>
+                                        </defs>
+                                        
+                                        <!-- 渐变面积图 -->
+                                        <path id="trendAreaPath" d="" fill="url(#chartGlowGrad)" />
+                                        <!-- 折线路径 -->
+                                        <path id="trendLinePath" d="" fill="none" stroke="#00f0ff" stroke-width="2.5" stroke-linecap="round" />
+                                        <!-- 数据节点粒子 -->
+                                        <g id="trendPoints"></g>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+        
+                    </section>
+        
+                    <!-- ==================== 中间栏 (生理数字人核心区) ==================== -->
+                    <section class="center-section">
+                        
+                        <!-- 生理数字人中心展示区 -->
+                        <div class="twin-digital-viewport">
+                            
+                            <div class="view-overlay-border"></div>
+                            <div class="scanning-beam"></div>
+                            
+                            <!-- 身体状态标签系统 (悬浮标签与激光雷达指向点) -->
+                            <div class="floating-tags-container">
+                                <!-- 左侧标签 -->
+                                <div class="float-tag tag-left tag-sleep" style="top: 15%;">
+                                    <div class="tag-glow-border"></div>
+                                    <span class="tag-icon">🌙</span>
+                                    <div class="tag-info">
+                                        <span class="tag-title">睡眠时长</span>
+                                        <span class="tag-value text-neon-yellow">-- 小时</span>
+                                    </div>
+                                </div>
+        
+                                <div class="float-tag tag-left tag-bp" style="top: 45%;">
+                                    <div class="tag-glow-border"></div>
+                                    <span class="tag-icon">❤️</span>
+                                    <div class="tag-info">
+                                        <span class="tag-title">实时血压</span>
+                                        <span class="tag-value text-neon-green">-- mmHg</span>
+                                    </div>
+                                </div>
+        
+                                <div class="float-tag tag-left tag-o2" style="top: 75%;">
+                                    <div class="tag-glow-border"></div>
+                                    <span class="tag-icon">💧</span>
+                                    <div class="tag-info">
+                                        <span class="tag-title">实时血氧</span>
+                                        <span class="tag-value text-neon-green">--%</span>
+                                    </div>
+                                </div>
+        
+                                <!-- 右侧标签 -->
+                                <div class="float-tag tag-right tag-bmi" style="top: 15%;">
+                                    <div class="tag-glow-border"></div>
+                                    <span class="tag-icon">⚖️</span>
+                                    <div class="tag-info">
+                                        <span class="tag-title">BMI指标</span>
+                                        <span class="tag-value text-neon-green">${bmiVal} 正常</span>
+                                    </div>
+                                </div>
+        
+                                <div class="float-tag tag-right tag-heart" style="top: 45%;">
+                                    <div class="tag-glow-border"></div>
+                                    <span class="tag-icon">⚡</span>
+                                    <div class="tag-info">
+                                        <span class="tag-title">实时心率</span>
+                                        <span class="tag-value text-neon-green">-- 次/分</span>
+                                    </div>
+                                </div>
+        
+                                <div class="float-tag tag-right tag-step" style="top: 75%;">
+                                    <div class="tag-glow-border"></div>
+                                    <span class="tag-icon">🏃</span>
+                                    <div class="tag-info">
+                                        <span class="tag-title">今日步数</span>
+                                        <span class="tag-value text-neon-green">-- 步</span>
+                                    </div>
+                                </div>
+                            </div>
+        
+                            <!-- SVG连接引线系统 (连接浮动气泡与数字人特定发光点) -->
+                            <svg class="connecting-lines-svg" viewBox="0 0 600 500">
+                                <defs>
+                                    <marker id="dot-marker-green" markerWidth="6" markerHeight="6" refX="3" refY="3">
+                                        <circle cx="3" cy="3" r="2.5" fill="#10b981" />
+                                    </marker>
+                                    <marker id="dot-marker-yellow" markerWidth="6" markerHeight="6" refX="3" refY="3">
+                                        <circle cx="3" cy="3" r="2.5" fill="#f59e0b" />
+                                    </marker>
+                                    <marker id="dot-marker-red" markerWidth="6" markerHeight="6" refX="3" refY="3">
+                                        <circle cx="3" cy="3" r="2.5" fill="#f43f5e" />
+                                    </marker>
+                                </defs>
+                                <!-- 激光线连线 -->
+                                <path d="M 140 90 L 250 90 L 290 80" class="laser-line line-yellow" id="line-sleep-ptr" marker-end="url(#dot-marker-yellow)" />
+                                <path d="M 140 240 L 240 240 L 295 190" class="laser-line line-green" id="line-bp-ptr" marker-end="url(#dot-marker-green)" />
+                                <path d="M 140 390 L 250 390 L 295 210" class="laser-line line-green" id="line-o2-ptr" marker-end="url(#dot-marker-green)" />
+                                
+                                <path d="M 460 90 L 350 90 L 315 130" class="laser-line line-green" id="line-bmi-ptr" marker-end="url(#dot-marker-green)" />
+                                <path d="M 460 240 L 360 240 L 305 190" class="laser-line line-green" id="line-heart-ptr" marker-end="url(#dot-marker-green)" />
+                                <path d="M 460 390 L 350 390 L 320 370" class="laser-line line-green" id="line-step-ptr" marker-end="url(#dot-marker-green)" />
+                            </svg>
+        
+                            <!-- 3D数字人模型 SVG -->
+                            <div class="twin-model-container">
+                                <svg class="human-silhouette-svg" viewBox="0 0 100 100">
+                                    <defs>
+                                        <radialGradient id="bodyGlow" cx="50%" cy="50%" r="50%">
+                                            <stop offset="0%" stop-color="rgba(0, 240, 255, 0.2)" />
+                                            <stop offset="70%" stop-color="rgba(2, 132, 199, 0.05)" />
+                                            <stop offset="100%" stop-color="rgba(0, 0, 0, 0)" />
+                                        </radialGradient>
+                                        <filter id="neonShadow" x="-20%" y="-20%" width="140%" height="140%">
+                                            <feGaussianBlur stdDeviation="1.5" result="blur" />
+                                            <feMerge>
+                                                <feMergeNode in="blur" />
+                                                <feMergeNode in="SourceGraphic" />
+                                            </feMerge>
+                                        </filter>
+                                    </defs>
+                                    
+                                    <ellipse cx="50" cy="50" rx="20" ry="42" fill="url(#bodyGlow)" />
+        
+                                    <!-- 骨骼结构 -->
+                                    <path d="M 50 8 C 45 8, 43 13, 43 16 C 43 21, 46 22, 50 22 C 54 22, 57 21, 57 16 C 57 13, 55 8, 50 8 Z" class="skeletal-line" />
+                                    <path d="M 50 22 L 50 56" class="skeletal-line spine" />
+                                    <path d="M 45 27 Q 50 29, 55 27 M 43 32 Q 50 35, 57 32 M 42 37 Q 50 41, 58 37 M 43 42 Q 50 46, 57 42 M 45 47 Q 50 50, 55 47" class="skeletal-line rib" />
+                                    
+                                    <path d="M 32 28 Q 41 24, 50 24 Q 59 24, 68 28" class="skeletal-line shoulder" />
+                                    <path d="M 32 28 L 26 40 L 21 52" class="skeletal-line upper-limb-left" />
+                                    <path d="M 68 28 L 74 40 L 79 52" class="skeletal-line upper-limb-right" />
+                                    
+                                    <path d="M 42 56 L 58 56 L 55 60 L 45 60 Z" class="skeletal-line pelvis" />
+                                    <path d="M 45 60 L 43 74 L 40 90" class="skeletal-line leg-left" />
+                                    <path d="M 55 60 L 57 74 L 60 90" class="skeletal-line leg-right" />
+                                    
+                                    <path d="M 46 12 Q 50 10, 54 12 Q 56 15, 50 19 Q 44 15, 46 12 Z" fill="rgba(0, 240, 255, 0.25)" stroke="#00f0ff" stroke-width="0.5" filter="url(#neonShadow)" />
+                                    <circle cx="48.5" cy="29" r="2.2" class="organ-heart" filter="url(#neonShadow)" />
+                                    <path d="M 48.5 29 L 46 32 M 48.5 29 L 51 27 M 48.5 29 L 49 26" stroke="#ef4444" stroke-width="0.4" />
+                                    <path d="M 43 28 C 43 36, 47 38, 47 28 Z" fill="rgba(0, 240, 255, 0.15)" stroke="#00f0ff" stroke-width="0.4" />
+                                    <path d="M 57 28 C 57 36, 53 38, 53 28 Z" fill="rgba(0, 240, 255, 0.15)" stroke="#00f0ff" stroke-width="0.4" />
+                                    <path d="M 46 41 Q 50 39, 53 42 Q 52 47, 48 46 Z" fill="rgba(245, 158, 11, 0.15)" stroke="#f59e0b" stroke-width="0.4" />
+                                    <circle cx="46" cy="49" r="1.2" fill="rgba(0, 240, 255, 0.3)" stroke="#00f0ff" stroke-width="0.3" />
+                                    <circle cx="54" cy="49" r="1.2" fill="rgba(0, 240, 255, 0.3)" stroke="#00f0ff" stroke-width="0.3" />
+                                    
+                                    <circle cx="21" cy="52" r="1.5" class="watch-sensor-glow" filter="url(#neonShadow)" />
+                                </svg>
+                            </div>
+        
+                            <!-- 发光的 3D 双环底座 -->
+                            <div class="pedestal-container">
+                                <svg class="pedestal-svg" viewBox="0 0 300 100">
+                                    <ellipse cx="150" cy="50" rx="110" ry="25" class="ring-outer" />
+                                    <ellipse cx="150" cy="50" rx="80" ry="18" class="ring-inner" />
+                                    <polygon points="70,50 230,50 200,90 100,90" fill="url(#pedestalGlow)" opacity="0.3" />
+                                    <defs>
+                                        <linearGradient id="pedestalGlow" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stop-color="#00f0ff" />
+                                            <stop offset="100%" stop-color="rgba(0, 0, 0, 0)" />
+                                        </linearGradient>
+                                    </defs>
+                                </svg>
+                            </div>
+        
+                            <!-- 健康总体评估 -->
+                            <div class="assessment-container">
+                                <span class="assess-label">24小时健康评估</span>
+                                <div class="assess-badge" id="overall-assessment">--</div>
+                                <div class="assess-stars">
+                                    <!-- 动态填充星级 -->
+                                </div>
+                            </div>
+                        </div>
+        
+                        <!-- 未来一个月疾病风险概率 (AI 预测模型) -->
+                        <div class="cyber-panel clip-bottom" id="panel-risk">
+                            <div class="panel-border"></div>
+                            <div class="panel-header-bar">
+                                <span class="panel-icon">🧬</span>
+                                <h2 class="panel-title">未来一个月疾病风险预测 (AI 预测模型)</h2>
+                            </div>
+                            <div class="panel-body">
+                                <div class="disease-risk-grid">
+                                    <div class="risk-bar-item">
+                                        <div class="risk-bar-header">
+                                            <span class="disease-name">房颤</span>
+                                            <span class="disease-percent" id="risk-fib">0%</span>
+                                        </div>
+                                        <div class="risk-progress-bg">
+                                            <div class="risk-progress-bar bg-neon-green" id="risk-bar-fib" style="width: 0%;"></div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="risk-bar-item">
+                                        <div class="risk-bar-header">
+                                            <span class="disease-name">心力衰竭</span>
+                                            <span class="disease-percent" id="risk-chf">0%</span>
+                                        </div>
+                                        <div class="risk-progress-bg">
+                                            <div class="risk-progress-bar bg-neon-green" id="risk-bar-chf" style="width: 0%;"></div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="risk-bar-item">
+                                        <div class="risk-bar-header">
+                                            <span class="disease-name">冠心病</span>
+                                            <span class="disease-percent" id="risk-chd">0%</span>
+                                        </div>
+                                        <div class="risk-progress-bg">
+                                            <div class="risk-progress-bar bg-neon-green" id="risk-bar-chd" style="width: 0%;"></div>
+                                        </div>
+                                    </div>
+        
+                                    <div class="risk-bar-item">
+                                        <div class="risk-bar-header">
+                                            <span class="disease-name">心动过速</span>
+                                            <span class="disease-percent" id="risk-tachy">0%</span>
+                                        </div>
+                                        <div class="risk-progress-bg">
+                                            <div class="risk-progress-bar bg-neon-yellow" id="risk-bar-tachy" style="width: 0%;"></div>
+                                        </div>
+                                    </div>
+        
+                                    <div class="risk-bar-item">
+                                        <div class="risk-bar-header">
+                                            <span class="disease-name">心动过缓</span>
+                                            <span class="disease-percent" id="risk-brady">0%</span>
+                                        </div>
+                                        <div class="risk-progress-bg">
+                                            <div class="risk-progress-bar bg-neon-green" id="risk-bar-brady" style="width: 0%;"></div>
+                                        </div>
+                                    </div>
+        
+                                    <div class="risk-bar-item">
+                                        <div class="risk-bar-header">
+                                            <span class="disease-name">心梗</span>
+                                            <span class="disease-percent" id="risk-mi">0%</span>
+                                        </div>
+                                        <div class="risk-progress-bg">
+                                            <div class="risk-progress-bar bg-neon-green" id="risk-bar-mi" style="width: 0%;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+        
+                    </section>
+        
+                    <!-- ==================== 右侧栏 ==================== -->
+                    <section class="right-section">
+                        
+                        <!-- 睡眠分析 (Sleep Analysis) -->
+                        <div class="cyber-panel clip-topRight" id="panel-sleep">
+                            <div class="panel-border"></div>
+                            <div class="panel-header-bar">
+                                <span class="panel-icon">🌙</span>
+                                <h2 class="panel-title">深度睡眠监测与质量分析</h2>
+                            </div>
+                            <div class="panel-body">
+                                <div class="sleep-summary-header">
+                                    <div class="sleep-summary-item">
+                                        <span class="sleep-summary-lbl">总睡眠时长</span>
+                                        <span class="sleep-summary-val text-neon-yellow" id="sleep-total">--小时</span>
+                                    </div>
+                                    <div class="sleep-summary-item">
+                                        <span class="sleep-summary-lbl">深睡时长</span>
+                                        <span class="sleep-summary-val text-neon-green" id="sleep-deep">--小时</span>
+                                    </div>
+                                    <div class="sleep-summary-item">
+                                        <span class="sleep-summary-lbl">浅睡时长</span>
+                                        <span class="sleep-summary-val text-neon-cyan" id="sleep-light">--小时</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="sleep-analysis-main">
+                                    <div class="sleep-stacked-wrapper">
+                                        <div class="sleep-timeline-labels">
+                                            <span>入睡 03:22</span>
+                                            <span>起床 06:04</span>
+                                        </div>
+                                        <div class="sleep-stacked-bar">
+                                            <div class="sleep-segment seg-awake" id="sleep-bar-awake" style="width: 15%;" title="清醒: 22分钟"></div>
+                                            <div class="sleep-segment seg-light" id="sleep-bar-light" style="width: 35%;" title="浅睡: 1小时2分"></div>
+                                            <div class="sleep-segment seg-deep" id="sleep-bar-deep" style="width: 50%;" title="深睡: 1小时40分"></div>
+                                        </div>
+                                        <div class="sleep-legend">
+                                            <span class="legend-dot dot-awake"></span> 清醒
+                                            <span class="legend-dot dot-light"></span> 浅睡
+                                            <span class="legend-dot dot-deep"></span> 深睡
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="sleep-ratio-sidebar">
+                                        <div class="ratio-item">
+                                            <div class="ratio-lbl-row">
+                                                <span>深睡占比</span>
+                                                <span class="text-neon-green" id="ratio-val-deep">0%</span>
+                                            </div>
+                                            <div class="ratio-bar-bg"><div class="ratio-bar-fill bg-sleep-deep" id="ratio-fill-deep" style="width: 0%;"></div></div>
+                                        </div>
+                                        <div class="ratio-item">
+                                            <div class="ratio-lbl-row">
+                                                <span>浅睡占比</span>
+                                                <span class="text-neon-cyan" id="ratio-val-light">0%</span>
+                                            </div>
+                                            <div class="ratio-bar-bg"><div class="ratio-bar-fill bg-sleep-light" id="ratio-fill-light" style="width: 0%;"></div></div>
+                                        </div>
+                                        <div class="ratio-item">
+                                            <div class="ratio-lbl-row">
+                                                <span>清醒占比</span>
+                                                <span class="text-neon-yellow" id="ratio-val-awake">0%</span>
+                                            </div>
+                                            <div class="ratio-bar-bg"><div class="ratio-bar-fill bg-sleep-awake" id="ratio-fill-awake" style="width: 0%;"></div></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+        
+                        <!-- 运动分析 (Motion Analysis) -->
+                        <div class="cyber-panel" id="panel-motion">
+                            <div class="panel-border"></div>
+                            <div class="panel-header-bar">
+                                <span class="panel-icon">🏃</span>
+                                <h2 class="panel-title">运动强度与日常活动监控</h2>
+                            </div>
+                            <div class="panel-body">
+                                <div class="motion-steps-header">
+                                    <span class="motion-steps-lbl">当日累计运动量</span>
+                                    <div class="motion-steps-val">
+                                        <span class="steps-num text-neon-cyan" id="motion-total-steps">0</span>
+                                        <span class="steps-unit">步</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="motion-chart-wrapper">
+                                    <div class="motion-chart-bars" id="motionChartBars">
+                                        <!-- 由 JS 渲染 24 小时条柱 -->
+                                    </div>
+                                    <div class="motion-chart-x">
+                                        <span>00:00</span>
+                                        <span>06:00</span>
+                                        <span>12:00</span>
+                                        <span>18:00</span>
+                                        <span>24:00</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+        
+                        <!-- 器官分析与中医脉象诊断 (Organ Analysis & TCM Diagnosis) -->
+                        <div class="cyber-panel clip-bottomRight" id="panel-tcm">
+                            <div class="panel-border"></div>
+                            <div class="panel-header-bar">
+                                <span class="panel-icon">☯️</span>
+                                <h2 class="panel-title">器官气血状态与中医脉象诊断</h2>
+                            </div>
+                            <div class="panel-body tcm-grid-layout">
+                                
+                                <div class="tcm-radar-section">
+                                    <svg class="tcm-radar-svg" id="tcmRadar" viewBox="0 0 160 160">
+                                        <!-- 同心八边形网格 -->
+                                        <polygon points="80,10 129,30 150,80 129,130 80,150 31,130 10,80 31,30" class="radar-grid" />
+                                        <polygon points="80,27.5 116.7,42.5 132.5,80 116.7,117.5 80,132.5 43.3,117.5 27.5,80 43.3,42.5" class="radar-grid" />
+                                        <polygon points="80,45 104.5,55 115,80 104.5,105 80,115 55.5,105 45,80 55.5,55" class="radar-grid" />
+                                        <polygon points="80,62.5 92.2,67.5 97.5,80 92.2,92.5 80,97.5 67.8,92.5 62.5,80 67.8,67.5" class="radar-grid" />
+                                        
+                                        <!-- 8 轴线 -->
+                                        <line x1="80" y1="80" x2="80" y2="10" class="radar-axis" />
+                                        <line x1="80" y1="80" x2="129" y2="30" class="radar-axis" />
+                                        <line x1="80" y1="80" x2="150" y2="80" class="radar-axis" />
+                                        <line x1="80" y1="80" x2="129" y2="130" class="radar-axis" />
+                                        <line x1="80" y1="80" x2="80" y2="150" class="radar-axis" />
+                                        <line x1="80" y1="80" x2="31" y2="130" class="radar-axis" />
+                                        <line x1="80" y1="80" x2="10" y2="80" class="radar-axis" />
+                                        <line x1="80" y1="80" x2="31" y2="30" class="radar-axis" />
+                                        
+                                        <!-- 器官标注 -->
+                                        <text x="80" y="8" class="radar-lbl anchor-middle">心</text>
+                                        <text x="134" y="27" class="radar-lbl anchor-start">胃</text>
+                                        <text x="154" y="83" class="radar-lbl anchor-start">肺</text>
+                                        <text x="134" y="138" class="radar-lbl anchor-start">大肠</text>
+                                        <text x="80" y="159" class="radar-lbl anchor-middle">肾</text>
+                                        <text x="26" y="138" class="radar-lbl anchor-end">脾</text>
+                                        <text x="6" y="83" class="radar-lbl anchor-end">肝</text>
+                                        <text x="26" y="27" class="radar-lbl anchor-end">小肠</text>
+                                        
+                                        <polygon id="radarValuePolygon" points="" fill="rgba(0, 240, 255, 0.25)" stroke="#00f0ff" stroke-width="1.8" />
+                                    </svg>
+                                    
+                                    <div class="radar-center-info">
+                                        <span class="radar-info-label">脏腑状况</span>
+                                        <span class="radar-info-val text-neon-yellow" id="organ-status-overall">小肠 亚健康</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="tcm-diagnose-details">
+                                    <div class="diag-group">
+                                        <span class="diag-title">常见症状描述</span>
+                                        <ul class="diag-list" id="tcm-symptoms">
+                                            <!-- 动态充填症状 -->
+                                        </ul>
+                                    </div>
+                                    
+                                    <div class="diag-group">
+                                        <span class="diag-title">中医脉象解读</span>
+                                        <p class="diag-para text-neon-cyan" id="pulse-analysis">--</p>
+                                        <div class="affected-areas" id="tcm-affected-areas">
+                                            <!-- 动态标签 -->
+                                        </div>
+                                    </div>
+                                </div>
+        
+                            </div>
+                        </div>
+        
+                    </section>
+        
+                </main>
+        
             </div>
         </div>
     `;
     
-    // 绑定所有的 data-close 关闭按键
+    // 2. 绑定 data-close 关闭动作，确保在全局 closeModal 被点击时同步销毁大屏定时器
     container.querySelectorAll("[data-close='resident-portrait-modal']").forEach(btn => {
         btn.onclick = () => closeModal("resident-portrait-modal");
     });
     
     openModal("resident-portrait-modal");
     
-    // 注册北京时间大屏时钟
-    const updateScreenClock = () => {
-        const timeEl = document.getElementById("portrait-clock-time");
+    // 3. 构建本地大屏居民映射数据集
+    const activePatient = {
+        name: maskedName,
+        realName: r.name,
+        phone: maskedPhone,
+        gender: r.gender,
+        height: r.height || 170,
+        weight: r.weight || 69,
+        bmi: parseFloat(bmiVal),
+        bmiStatus: parseFloat(bmiVal) >= 28 ? "肥胖" : (parseFloat(bmiVal) >= 24 ? "超重" : "正常"),
+        overallAssessment: healthLabel,
+        vitals: {
+            heartRate: r.heart_rate || 75,
+            heartRateStatus: r.heart_rate >= 100 ? "心律不齐" : (r.heart_rate < 60 ? "偏低" : "正常"),
+            spO2: r.blood_oxygen || 98,
+            spO2Status: r.blood_oxygen >= 95 ? "正常" : "偏低",
+            sleepHours: r.health_level === "red" ? 4.2 : (r.health_level === "yellow" ? 5.5 : 7.2),
+            sleepStatus: r.health_level === "red" ? "严重不足" : (r.health_level === "yellow" ? "睡眠不足" : "健康"),
+            bpSystolic: parseInt((r.blood_pressure || "120/80").split("/")[0]) || 120,
+            bpDiastolic: parseInt((r.blood_pressure || "120/80").split("/")[1]) || 80,
+            bpStatus: r.health_level === "red" ? "高血压风险" : "正常",
+            steps: r.steps || 5247
+        },
+        trends: {
+            heart: (trends && trends.heart_rate && trends.heart_rate.length > 0) ? trends.heart_rate : [78, 80, 83, 85, 92, 79, 74, 82, 80, 85],
+            o2: (trends && trends.blood_oxygen && trends.blood_oxygen.length > 0) ? trends.blood_oxygen : [99, 99, 98, 99, 99, 97, 98, 99, 99, 99],
+            sleep: [0, 0, 1, 2, 3, 2, 3, 1, 0, 0],
+            bp: [120, 122, 128, 131, 124, 119, 122, 126, 128, 125],
+            step: [200, 400, 1200, 1500, 2400, 3100, 4200, 4800, 5200, 6000]
+        },
+        tcmScores: {
+            heart: r.health_level === "red" ? 0.65 : 0.85,
+            stomach: 0.80,
+            lung: 0.90,
+            colon: 0.80,
+            kidney: r.health_level === "red" ? 0.70 : 0.88,
+            spleen: 0.85,
+            liver: 0.82,
+            intestine: r.health_level === "yellow" ? 0.45 : 0.85
+        }
+    };
+    
+    // 4. 定时渲染大屏时钟
+    const renderHeaderTime = () => {
+        const timeEl = document.getElementById("headerTime");
         if (!timeEl) return;
         const now = new Date();
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const date = String(now.getDate()).padStart(2, '0');
-        const hrs = String(now.getHours()).padStart(2, '0');
-        const mins = String(now.getMinutes()).padStart(2, '0');
-        const secs = String(now.getSeconds()).padStart(2, '0');
-        timeEl.textContent = `${year}-${month}-${date} ${hrs}:${mins}:${secs}`;
+        const yyyy = now.getFullYear();
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const dd = String(now.getDate()).padStart(2, '0');
+        const hh = String(now.getHours()).padStart(2, '0');
+        const min = String(now.getMinutes()).padStart(2, '0');
+        const ss = String(now.getSeconds()).padStart(2, '0');
+        timeEl.textContent = `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`;
     };
-    updateScreenClock();
-    const screenClockTimer = setInterval(updateScreenClock, 1000);
+    renderHeaderTime();
+    state.screenClockTimer = setInterval(renderHeaderTime, 1000);
     
-    // 当弹窗关闭时，清除该定时器以防内存泄露
-    const originalClose = window.closeModal;
-    window.closeModal = function(modalId) {
-        if (modalId === "resident-portrait-modal") {
-            clearInterval(screenClockTimer);
+    // 5. 内部声明大屏各模块的局部渲染函数 (闭包引用 activePatient)
+    
+    // D01. 生理体征卡片与气泡数值同步
+    const renderVitalCards = () => {
+        // 心率
+        const hrVal = document.getElementById("vital-heart-value");
+        const hrStat = document.getElementById("vital-heart-status");
+        const hrTime = document.getElementById("vital-heart-time");
+        if (hrVal && hrStat && hrTime) {
+            hrVal.textContent = activePatient.vitals.heartRate;
+            hrStat.textContent = activePatient.vitals.heartRateStatus;
+            hrStat.className = `vital-status ${getNeonClassByStatus(activePatient.vitals.heartRateStatus)}`;
+            hrTime.textContent = `更新时间: ${getRecentTimeString()}`;
         }
-        originalClose(modalId);
+        // 更新中间的悬浮气泡
+        const bubHeart = document.querySelector(".tag-heart .tag-value");
+        if (bubHeart) bubHeart.textContent = `${activePatient.vitals.heartRate} 次/分`;
+        
+        // 血氧
+        const o2Val = document.getElementById("vital-o2-value");
+        const o2Stat = document.getElementById("vital-o2-status");
+        const o2Time = document.getElementById("vital-o2-time");
+        if (o2Val && o2Stat && o2Time) {
+            o2Val.textContent = activePatient.vitals.spO2;
+            o2Stat.textContent = activePatient.vitals.spO2Status;
+            o2Stat.className = `vital-status ${getNeonClassByStatus(activePatient.vitals.spO2Status)}`;
+            o2Time.textContent = `更新时间: ${getRecentTimeString()}`;
+        }
+        const bubO2 = document.querySelector(".tag-o2 .tag-value");
+        if (bubO2) bubO2.textContent = `${activePatient.vitals.spO2}%`;
+        
+        // 睡眠
+        const sleepVal = document.getElementById("vital-sleep-value");
+        const sleepStat = document.getElementById("vital-sleep-status");
+        if (sleepVal && sleepStat) {
+            sleepVal.textContent = activePatient.vitals.sleepHours.toFixed(1);
+            sleepStat.textContent = activePatient.vitals.sleepStatus;
+            sleepStat.className = `vital-status ${getNeonClassByStatus(activePatient.vitals.sleepStatus)}`;
+        }
+        const bubSleep = document.querySelector(".tag-sleep .tag-value");
+        if (bubSleep) bubSleep.textContent = `${activePatient.vitals.sleepHours.toFixed(1)} 小时`;
+        
+        // 血压
+        const bpVal = document.getElementById("vital-bp-value");
+        const bpStat = document.getElementById("vital-bp-status");
+        const bpTime = document.getElementById("vital-bp-time");
+        if (bpVal && bpStat && bpTime) {
+            bpVal.textContent = `${activePatient.vitals.bpSystolic}/${activePatient.vitals.bpDiastolic}`;
+            bpStat.textContent = activePatient.vitals.bpStatus;
+            bpStat.className = `vital-status ${getNeonClassByStatus(activePatient.vitals.bpStatus)}`;
+            bpTime.textContent = `更新时间: ${getRecentTimeString()}`;
+        }
+        const bubBp = document.querySelector(".tag-bp .tag-value");
+        if (bubBp) bubBp.textContent = `${activePatient.vitals.bpSystolic}/${activePatient.vitals.bpDiastolic} mmHg`;
+        
+        // 步数
+        const stepVal = document.getElementById("vital-step-value");
+        if (stepVal) {
+            stepVal.textContent = activePatient.vitals.steps;
+        }
+        const bubStep = document.querySelector(".tag-step .tag-value");
+        if (bubStep) bubStep.textContent = `${activePatient.vitals.steps} 步`;
     };
     
-    // 渲染 Chart.js 趋势图表群并定位子午流注时辰
-    requestAnimationFrame(() => {
-        renderResidentTrendChart(portrait.trends);
-        renderResidentSleepChart();
-        renderResidentSportChart();
-        initOrganClock();
+    // 气泡霓虹高亮辅助
+    const getNeonClassByStatus = (status) => {
+        if (["正常", "健康", "达标"].includes(status)) return "text-neon-green";
+        if (["亚健康", "睡眠不足", "临界偏高"].includes(status)) return "text-neon-yellow";
+        if (["风险", "心律不齐", "严重不足", "高血压风险"].includes(status)) return "text-neon-red";
+        return "text-neon-cyan";
+    };
+    
+    // D02. 健康评估结论与星级判定
+    const renderOverallAssessment = () => {
+        const assessEl = document.getElementById("overall-assessment");
+        const containerAssess = document.querySelector(".assessment-container");
+        if (assessEl && containerAssess) {
+            assessEl.textContent = activePatient.overallAssessment;
+            assessEl.className = "assess-badge";
+            
+            const starsEl = containerAssess.querySelector(".assess-stars");
+            let starsHtml = "";
+            
+            if (activePatient.overallAssessment === "健康") {
+                assessEl.classList.add("bg-neon-green");
+                starsHtml = `<span class="star filled">★</span><span class="star filled">★</span><span class="star filled">★</span><span class="star filled">★</span><span class="star filled">★</span>`;
+            } else if (activePatient.overallAssessment === "风险") {
+                assessEl.classList.add("bg-neon-red");
+                starsHtml = `<span class="star filled">★</span><span class="star filled">★</span><span class="star">☆</span><span class="star">☆</span><span class="star">☆</span>`;
+            } else {
+                assessEl.classList.add("bg-neon-yellow");
+                starsHtml = `<span class="star filled">★</span><span class="star filled">★</span><span class="star filled">★</span><span class="star filled">★</span><span class="star">☆</span>`;
+            }
+            if (starsEl) starsEl.innerHTML = starsHtml;
+        }
+    };
+    
+    // D03. 未来疾病预测概率
+    const renderDiseaseRisks = () => {
+        const risks = {
+            fib: r.health_level === "red" ? 3.4 : 1.2,
+            chf: r.health_level === "red" ? 2.8 : 0.8,
+            chd: r.health_level === "red" ? 11.5 : 4.5,
+            tachy: r.health_level === "red" ? 32.5 : 15.2,
+            brady: r.health_level === "red" ? 0.8 : 2.1,
+            mi: r.health_level === "red" ? 4.2 : 0.6
+        };
         
-        // 绑定下左生理趋势切换
-        const tabItems = container.querySelectorAll(".trend-tab-item");
-        tabItems.forEach(tab => {
-            tab.onclick = () => {
-                tabItems.forEach(t => t.classList.remove("active"));
-                tab.classList.add("active");
-                const type = tab.getAttribute("data-type");
+        Object.keys(risks).forEach(key => {
+            const percentEl = document.getElementById(`risk-${key}`);
+            const barFill = document.getElementById(`risk-bar-${key}`);
+            if (percentEl && barFill) {
+                percentEl.textContent = `${risks[key]}%`;
+                barFill.style.width = `${Math.min(risks[key] * 2, 100)}%`;
                 
-                // 根据所选指标刷新折线图
-                const subtitleEl = document.getElementById("portrait-trend-subtitle");
-                if (type === "heart") {
-                    if (subtitleEl) subtitleEl.textContent = "心率 - 24h 趋势";
-                    renderResidentTrendChart(portrait.trends, "heart");
-                } else if (type === "oxygen") {
-                    if (subtitleEl) subtitleEl.textContent = "血氧 - 24h 趋势";
-                    renderResidentTrendChart(portrait.trends, "oxygen");
-                } else if (type === "breath") {
-                    if (subtitleEl) subtitleEl.textContent = "呼吸率 - 24h 趋势";
-                    renderResidentTrendChart(portrait.trends, "breath");
-                } else if (type === "temp") {
-                    if (subtitleEl) subtitleEl.textContent = "体温 - 24h 趋势";
-                    renderResidentTrendChart(portrait.trends, "temp");
-                } else if (type === "pressure") {
-                    if (subtitleEl) subtitleEl.textContent = "血压 - 24h 趋势";
-                    renderResidentTrendChart(portrait.trends, "pressure");
-                } else if (type === "sugar") {
-                    if (subtitleEl) subtitleEl.textContent = "血糖 - 24h 趋势";
-                    renderResidentTrendChart(portrait.trends, "sugar");
+                barFill.className = "risk-progress-bar";
+                if (risks[key] > 20) {
+                    barFill.classList.add("bg-neon-red");
+                    percentEl.className = "disease-percent text-neon-red";
+                } else if (risks[key] > 10) {
+                    barFill.classList.add("bg-neon-yellow");
+                    percentEl.className = "disease-percent text-neon-yellow";
+                } else {
+                    barFill.classList.add("bg-neon-green");
+                    percentEl.className = "disease-percent";
                 }
+            }
+        });
+    };
+    
+    // D04. 睡眠质量三色柱状堆叠
+    const renderSleepStackedChart = () => {
+        const sleepTotalEl = document.getElementById("sleep-total");
+        const sleepDeepEl = document.getElementById("sleep-deep");
+        const sleepLightEl = document.getElementById("sleep-light");
+        
+        if (sleepTotalEl && sleepDeepEl && sleepLightEl) {
+            if (activePatient.overallAssessment === "风险") {
+                sleepTotalEl.textContent = "4.2小时";
+                sleepDeepEl.textContent = "1.2小时";
+                sleepLightEl.textContent = "3.0小时";
+                
+                const sAwake = document.getElementById("sleep-bar-awake");
+                const sLight = document.getElementById("sleep-bar-light");
+                const sDeep = document.getElementById("sleep-bar-deep");
+                if (sAwake && sLight && sDeep) {
+                    sAwake.style.width = "25%";
+                    sLight.style.width = "45%";
+                    sDeep.style.width = "30%";
+                }
+                
+                const valAwake = document.getElementById("ratio-val-awake");
+                const valLight = document.getElementById("ratio-val-light");
+                const valDeep = document.getElementById("ratio-val-deep");
+                const fillAwake = document.getElementById("ratio-fill-awake");
+                const fillLight = document.getElementById("ratio-fill-light");
+                const fillDeep = document.getElementById("ratio-fill-deep");
+                
+                if (valAwake) valAwake.textContent = "25.0%";
+                if (valLight) valLight.textContent = "45.0%";
+                if (valDeep) valDeep.textContent = "30.0%";
+                if (fillAwake) fillAwake.style.width = "25%";
+                if (fillLight) fillLight.style.width = "45%";
+                if (fillDeep) fillDeep.style.width = "30%";
+            } else {
+                sleepTotalEl.textContent = `${activePatient.vitals.sleepHours}小时`;
+                sleepDeepEl.textContent = "2.8小时";
+                sleepLightEl.textContent = "2.7小时";
+                
+                const sAwake = document.getElementById("sleep-bar-awake");
+                const sLight = document.getElementById("sleep-bar-light");
+                const sDeep = document.getElementById("sleep-bar-deep");
+                if (sAwake && sLight && sDeep) {
+                    sAwake.style.width = "10%";
+                    sLight.style.width = "40%";
+                    sDeep.style.width = "50%";
+                }
+                
+                const valAwake = document.getElementById("ratio-val-awake");
+                const valLight = document.getElementById("ratio-val-light");
+                const valDeep = document.getElementById("ratio-val-deep");
+                const fillAwake = document.getElementById("ratio-fill-awake");
+                const fillLight = document.getElementById("ratio-fill-light");
+                const fillDeep = document.getElementById("ratio-fill-deep");
+                
+                if (valAwake) valAwake.textContent = "10.0%";
+                if (valLight) valLight.textContent = "40.0%";
+                if (valDeep) valDeep.textContent = "50.0%";
+                if (fillAwake) fillAwake.style.width = "10%";
+                if (fillLight) fillLight.style.width = "40%";
+                if (fillDeep) fillDeep.style.width = "50%";
+            }
+        }
+    };
+    
+    // D05. 24 小时运动图表渲染
+    const renderMotion24hChart = () => {
+        const containerMotion = document.getElementById("motionChartBars");
+        const stepsNumEl = document.getElementById("motion-total-steps");
+        
+        if (stepsNumEl) {
+            stepsNumEl.textContent = activePatient.vitals.steps;
+        }
+        
+        if (containerMotion) {
+            containerMotion.innerHTML = "";
+            const hourlySteps = [
+                0, 0, 0, 0, 0, 0, 50, 180, 450, 800, 320, 200, 
+                600, 150, 210, 300, 750, 1200, 600, 400, 150, 80, 0, 0
+            ];
+            const maxVal = Math.max(...hourlySteps);
+            
+            hourlySteps.forEach((steps, hour) => {
+                const bar = document.createElement("div");
+                bar.className = "motion-bar";
+                const pct = maxVal > 0 ? (steps / maxVal) * 100 : 0;
+                bar.style.height = `${Math.max(pct, 4)}%`;
+                
+                if (hour === 8 || hour === 17 || hour === 18) {
+                    bar.classList.add("active");
+                }
+                containerMotion.appendChild(bar);
+            });
+        }
+    };
+    
+    // D06. SVG 渐变趋势折线图绘制
+    const drawTrendChart = (type) => {
+        const svg = document.getElementById("trendChart");
+        if (!svg) return;
+        
+        const startX = 40;
+        const endX = 380;
+        const startY = 135;
+        const endY = 20;
+        const chartHeight = startY - endY;
+        const chartWidth = endX - startX;
+        
+        let dataset = [];
+        let minVal = 0, maxVal = 100;
+        let labelUnits = "";
+        
+        if (type === "heart") {
+            dataset = activePatient.trends.heart;
+            minVal = 50; maxVal = 130;
+            labelUnits = "次/分";
+        } else if (type === "o2") {
+            dataset = activePatient.trends.o2;
+            minVal = 94; maxVal = 100;
+            labelUnits = "%";
+        } else if (type === "sleep") {
+            dataset = activePatient.trends.sleep;
+            minVal = 0; maxVal = 4;
+            labelUnits = "度";
+        } else if (type === "bp") {
+            dataset = activePatient.trends.bp;
+            minVal = 80; maxVal = 150;
+            labelUnits = "mmHg";
+        } else if (type === "step") {
+            dataset = activePatient.trends.step;
+            minVal = 0; maxVal = 8000;
+            labelUnits = "步";
+        }
+        
+        const delta = (maxVal - minVal) / 4;
+        const lbl1 = svg.querySelector(".y-label-1");
+        const lbl2 = svg.querySelector(".y-label-2");
+        const lbl3 = svg.querySelector(".y-label-3");
+        const lbl4 = svg.querySelector(".y-label-4");
+        
+        if (lbl1) lbl1.textContent = Math.round(maxVal) + labelUnits;
+        if (lbl2) lbl2.textContent = Math.round(maxVal - delta) + labelUnits;
+        if (lbl3) lbl3.textContent = Math.round(minVal + delta * 2) + labelUnits;
+        if (lbl4) lbl4.textContent = Math.round(minVal + delta) + labelUnits;
+        
+        const pointsCount = dataset.length;
+        const segmentWidth = chartWidth / (pointsCount - 1);
+        
+        let pointsCoordinates = [];
+        for (let i = 0; i < pointsCount; i++) {
+            const val = dataset[i];
+            const x = startX + i * segmentWidth;
+            const ratio = (val - minVal) / (maxVal - minVal);
+            const y = startY - ratio * chartHeight;
+            pointsCoordinates.push({ x, y });
+        }
+        
+        const linePath = document.getElementById("trendLinePath");
+        const areaPath = document.getElementById("trendAreaPath");
+        const pointsGroup = document.getElementById("trendPoints");
+        
+        if (linePath && areaPath && pointsGroup) {
+            let lineD = "";
+            let areaD = `M ${startX} ${startY} `;
+            
+            pointsCoordinates.forEach((pt, idx) => {
+                if (idx === 0) {
+                    lineD += `M ${pt.x} ${pt.y} `;
+                } else {
+                    lineD += `L ${pt.x} ${pt.y} `;
+                }
+                areaD += `L ${pt.x} ${pt.y} `;
+            });
+            
+            areaD += `L ${pointsCoordinates[pointsCoordinates.length - 1].x} ${startY} Z`;
+            
+            linePath.setAttribute("d", lineD);
+            areaPath.setAttribute("d", areaD);
+            
+            linePath.style.animation = "none";
+            linePath.offsetHeight;
+            linePath.style.animation = "drawLine 2s ease-out forwards";
+            
+            pointsGroup.innerHTML = "";
+            pointsCoordinates.forEach((pt, idx) => {
+                const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                circle.setAttribute("cx", pt.x);
+                circle.setAttribute("cy", pt.y);
+                circle.setAttribute("r", "3.5");
+                circle.setAttribute("fill", "#020617");
+                circle.setAttribute("stroke", "#00f0ff");
+                circle.setAttribute("stroke-width", "1.5");
+                pointsGroup.appendChild(circle);
+            });
+        }
+    };
+    
+    // D07. 中医雷达图绘制
+    const drawTcmRadar = () => {
+        const polygon = document.getElementById("radarValuePolygon");
+        if (!polygon) return;
+        
+        const centerX = 80;
+        const centerY = 80;
+        const maxRadius = 70;
+        
+        const angles = [
+            -Math.PI / 2,         // 心
+            -Math.PI / 4,         // 胃
+            0,                    // 肺
+            Math.PI / 4,          // 大肠
+            Math.PI / 2,          // 肾
+            3 * Math.PI / 4,      // 脾
+            Math.PI,              // 肝
+            -3 * Math.PI / 4      // 小肠
+        ];
+        
+        const scores = [
+            activePatient.tcmScores.heart,
+            activePatient.tcmScores.stomach,
+            activePatient.tcmScores.lung,
+            activePatient.tcmScores.colon,
+            activePatient.tcmScores.kidney,
+            activePatient.tcmScores.spleen,
+            activePatient.tcmScores.liver,
+            activePatient.tcmScores.intestine
+        ];
+        
+        let pointsStr = "";
+        angles.forEach((angle, idx) => {
+            const score = scores[idx];
+            const radius = score * maxRadius;
+            const x = centerX + radius * Math.cos(angle);
+            const y = centerY + radius * Math.sin(angle);
+            pointsStr += `${x.toFixed(1)},${y.toFixed(1)} `;
+        });
+        polygon.setAttribute("points", pointsStr.trim());
+    };
+    
+    // D08. 中医症状列表与脉象解读装载
+    const renderTcmDiagnosis = () => {
+        const symptomsEl = document.getElementById("tcm-symptoms");
+        const pulseEl = document.getElementById("pulse-analysis");
+        const areasEl = document.getElementById("tcm-affected-areas");
+        
+        if (symptomsEl && pulseEl && areasEl) {
+            if (activePatient.overallAssessment === "风险") {
+                symptomsEl.innerHTML = `
+                    <li>胸痹心痛、胸闷气短</li>
+                    <li>腰膝酸软、下肢水肿</li>
+                    <li>夜尿频多、畏寒肢冷</li>
+                    <li>心火上炎、口舌糜烂肿痛</li>
+                `;
+                pulseEl.textContent = "心肾阳虚，命门火衰，水气凌心。脉沉细无力，尺部尤甚。";
+                areasEl.innerHTML = `
+                    <span class="area-tag">受累部位: 胸部</span>
+                    <span class="area-tag">受累部位: 肾脏</span>
+                    <span class="area-tag">疾病风险: 心衰</span>
+                `;
+            } else if (activePatient.overallAssessment === "亚健康") {
+                symptomsEl.innerHTML = `
+                    <li>胸胀、易气滞不舒</li>
+                    <li>易便秘、大肠传导阻滞</li>
+                    <li>腹部受凉时易隐痛泄泻</li>
+                    <li>口舌生疮、小肠积热</li>
+                `;
+                pulseEl.textContent = "心肾不交，小肠虚热，阴阳失调。脉细数，尺部虚浮。";
+                areasEl.innerHTML = `
+                    <span class="area-tag">受累部位: 腹部</span>
+                    <span class="area-tag">受累部位: 背部</span>
+                    <span class="area-tag">疾病风险: 肩周炎</span>
+                `;
+            } else {
+                symptomsEl.innerHTML = `
+                    <li>经络通畅、无明显不适</li>
+                    <li>脏腑协调、清浊升降正常</li>
+                    <li>气血充盈、运行顺畅</li>
+                `;
+                pulseEl.textContent = "脏腑和顺，气血安康。脉象和缓有力，寸关尺三部调匀。";
+                areasEl.innerHTML = `
+                    <span class="area-tag">受累部位: 无</span>
+                    <span class="area-tag">健康状态: 优秀</span>
+                `;
+            }
+        }
+    };
+    
+    // 6. 执行全看板模块的初次同步渲染
+    requestAnimationFrame(() => {
+        renderVitalCards();
+        renderOverallAssessment();
+        renderDiseaseRisks();
+        renderSleepStackedChart();
+        renderMotion24hChart();
+        renderTcmDiagnosis();
+        
+        // 首次默认绘制心率折线
+        drawTrendChart("heart");
+        drawTcmRadar();
+        
+        // 7. 绑定左下角趋势折线图的 Tab 切换事件
+        const tabButtons = container.querySelectorAll(".trend-tab");
+        tabButtons.forEach(btn => {
+            btn.onclick = (e) => {
+                const type = e.currentTarget.getAttribute("data-type");
+                tabButtons.forEach(b => b.classList.remove("active"));
+                e.currentTarget.classList.add("active");
+                drawTrendChart(type);
             };
         });
     });
+    
+    // 8. 启动手表体征数据 5 秒动态微幅扰动模拟 (增强现场表现力)
+    state.screenPerturbTimer = setInterval(() => {
+        // 心率微扰 (72-85)
+        const hrDiff = Math.random() > 0.5 ? 1 : -1;
+        let newHr = activePatient.vitals.heartRate + hrDiff;
+        if (newHr < 65) newHr = 68;
+        if (newHr > 105) newHr = 95;
+        activePatient.vitals.heartRate = newHr;
+        
+        // 血压微扰 (收缩压 ±1)
+        const bpDiff = Math.random() > 0.5 ? 1 : -1;
+        let newBpSys = activePatient.vitals.bpSystolic + bpDiff;
+        if (newBpSys < 110) newBpSys = 115;
+        if (newBpSys > 138) newBpSys = 132;
+        activePatient.vitals.bpSystolic = newBpSys;
+        
+        // 步数微小累加 (+2 到 +6 步)
+        const stepAdd = Math.floor(Math.random() * 5) + 2;
+        activePatient.vitals.steps += stepAdd;
+        
+        // 同步修改趋势数组的最后一位
+        activePatient.trends.heart[activePatient.trends.heart.length - 1] = newHr;
+        activePatient.trends.bp[activePatient.trends.bp.length - 1] = newBpSys;
+        activePatient.trends.step[activePatient.trends.step.length - 1] = activePatient.vitals.steps;
+        
+        // 触发增量刷新
+        renderVitalCards();
+        renderMotion24hChart();
+        
+        // 如果当前正好选中了可扰动的指标 Tab，重绘折线图实现“波动连贯”
+        const activeTab = container.querySelector(".trend-tab.active");
+        if (activeTab) {
+            const activeType = activeTab.getAttribute("data-type");
+            if (["heart", "bp", "step"].includes(activeType)) {
+                drawTrendChart(activeType);
+            }
+        }
+    }, 5000);
 }
-
 // ==================== 4. Canvas 动态呼吸连线拓扑图 (Pro Max) ====================
 
 function stopRelationshipAnimation() {
@@ -2539,6 +3395,16 @@ function openModal(id) {
 function closeModal(id) {
     const el = document.getElementById(id);
     if (el) el.classList.remove("active");
+    if (id === "resident-portrait-modal") {
+        if (state.screenClockTimer) {
+            clearInterval(state.screenClockTimer);
+            state.screenClockTimer = null;
+        }
+        if (state.screenPerturbTimer) {
+            clearInterval(state.screenPerturbTimer);
+            state.screenPerturbTimer = null;
+        }
+    }
 }
 
 // 方案节点编辑器与拖拽渲染
@@ -2948,7 +3814,59 @@ function renderWarningsTrendChart(data) {
                     fill: true
                 }
             ]
- // ☯ 初始化中医经络子午流注罗盘及研判 (高保真 12 经络旋转圆环对齐版)
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { labels: { color: '#94a3b8', font: { size: 11, family: 'Inter, sans-serif' } } }
+            },
+            scales: {
+                x: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: 'rgba(255,255,255,0.4)', font: { size: 10 } } },
+                y: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: 'rgba(255,255,255,0.4)', font: { size: 10 } } }
+            }
+        }
+    });
+}
+
+// 大屏风险类型占比
+function renderWarningsRatioChart(ratio) {
+    const el = document.getElementById("warningsRatioChart");
+    if (!el) return;
+    
+    destroyChart("warningsRatio");
+    
+    const ctx = el.getContext("2d");
+    if (!ctx) return;
+    
+    state.charts.warningsRatio = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['脑血管', '重度睡眠', '压力负荷'],
+            datasets: [{
+                data: [ratio.cardio, ratio.sleep, ratio.pressure],
+                backgroundColor: [
+                    '#ef4444', // 脑血管 - Danger 绯红
+                    '#49a2f9', // 重度睡眠 - Accent 冰蓝
+                    '#b180f9'  // 压力负荷 - 紫罗兰
+                ],
+                borderWidth: 3,
+                borderColor: '#1a2236',
+                hoverOffset: 3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '72%',
+            plugins: {
+                legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 10 } } }
+            }
+        }
+    });
+}
+
+// ☯ 初始化中医经络子午流注罗盘及研判 (高保真 12 经络旋转圆环对齐版)
 function initOrganClock() {
     const hand = document.getElementById("organ-clock-hand-ptr");
     const titleEl = document.getElementById("organ-clock-time-title");
@@ -3081,6 +3999,8 @@ function initOrganClock() {
             <div><strong style="color:#10b981;">【中医解释】</strong>：${current.explain}</div>
         `;
     }
+}
+
 // 居民趋势图 (心率、血氧、呼吸、血压等多指标动态切换)
 function renderResidentTrendChart(trends, type = "heart") {
     const el = document.getElementById("residentTrendChart");
