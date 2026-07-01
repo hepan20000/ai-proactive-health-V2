@@ -4,8 +4,475 @@
 
 const API_BASE = "/api";
 
+// ==================== 离线高保真 Mock 数据库 (GitHub Pages Fallback) ====================
+const OFFLINE_DB = {
+    doctors: [
+        {
+            "id": "doc_001",
+            "name": "张仲景",
+            "department": "中医内科",
+            "title": "主任医师",
+            "tags": ["体质调理", "脾胃调理", "经方调理"],
+            "status": "approved",
+            "residents_count": 42,
+            "last_intervention": "2026-06-24 10:30:00",
+            "avatar": "https://api.dicebear.com/7.x/adventurer/svg?seed=doc1",
+            "bio": "深耕伤寒杂病论与经方调理三十余年，擅长脾胃虚弱、亚健康慢病管理。",
+            "phone": "13800000001",
+            "wechat": "zzj_healer",
+            "privacy": {"phone": "resident", "wechat": "admin"},
+            "weight": 95,
+            "recommend_intro": "国医名师，深谙脾胃调理之法",
+            "gender": "男",
+            "age": 65,
+            "source": "register",
+            "is_recommended": true
+        },
+        {
+            "id": "doc_002",
+            "name": "孙思邈",
+            "department": "针灸推拿科",
+            "title": "副主任医师",
+            "tags": ["慢病管理", "经络养生"],
+            "status": "approved",
+            "residents_count": 28,
+            "last_intervention": "2026-06-24 11:15:00",
+            "avatar": "https://api.dicebear.com/7.x/adventurer/svg?seed=doc2",
+            "bio": "千金要方编撰者，致力于针灸与食疗养生相结合的现代慢病主动干预模式。",
+            "phone": "13800000002",
+            "wechat": "ssm_qianjin",
+            "privacy": {"phone": "admin", "wechat": "self"},
+            "weight": 88,
+            "recommend_intro": "药王传人，擅长针灸与食疗结合",
+            "gender": "男",
+            "age": 70,
+            "source": "admin",
+            "is_recommended": true
+        },
+        {
+            "id": "doc_003",
+            "name": "华佗",
+            "department": "康复医学科",
+            "title": "主任医师",
+            "tags": ["康复调理", "失眠多梦"],
+            "status": "pending",
+            "residents_count": 0,
+            "last_intervention": "",
+            "avatar": "https://api.dicebear.com/7.x/adventurer/svg?seed=doc3",
+            "bio": "五禽戏创编者，精通运动康复、外科微创与术后体质重建。",
+            "phone": "13800000003",
+            "wechat": "ht_fivebirds",
+            "privacy": {"phone": "resident", "wechat": "resident"},
+            "weight": 10,
+            "recommend_intro": "康复外科泰斗，五禽戏创编人",
+            "gender": "男",
+            "age": 55,
+            "source": "register",
+            "is_recommended": false
+        },
+        {
+            "id": "doc_004",
+            "name": "扁鹊",
+            "department": "治未病科",
+            "title": "主任医师",
+            "tags": ["亚健康调理", "慢病管理"],
+            "status": "pending",
+            "residents_count": 0,
+            "last_intervention": "",
+            "avatar": "https://api.dicebear.com/7.x/adventurer/svg?seed=doc4",
+            "bio": "擅长四诊合参、望闻问切，专注亚健康主动筛查与干优。",
+            "phone": "13800000004",
+            "wechat": "bq_lookpulse",
+            "privacy": {"phone": "self", "wechat": "self"},
+            "weight": 5,
+            "recommend_intro": "神医扁鹊，深谙治未病之理",
+            "gender": "男",
+            "age": 50,
+            "source": "admin",
+            "is_recommended": false
+        },
+        {
+            "id": "doc_005",
+            "name": "李时珍",
+            "department": "中医内科",
+            "title": "主任医师",
+            "tags": ["中药调理", "本草辨识"],
+            "status": "disabled",
+            "residents_count": 12,
+            "last_intervention": "2026-06-23 10:00:00",
+            "avatar": "https://api.dicebear.com/7.x/adventurer/svg?seed=doc5",
+            "bio": "本草纲目撰写者，擅长中药配伍及本草调理。",
+            "phone": "13800000005",
+            "wechat": "lsz_bencao",
+            "privacy": {"phone": "admin", "wechat": "admin"},
+            "weight": 20,
+            "recommend_intro": "本草纲目撰写者，精通本草调治",
+            "gender": "男",
+            "age": 48,
+            "source": "admin",
+            "is_recommended": false
+        },
+        {
+            "id": "doc_006",
+            "name": "董奉",
+            "department": "治未病科",
+            "title": "副主任医师",
+            "tags": ["杏林调理", "日常保健"],
+            "status": "rejected",
+            "residents_count": 0,
+            "last_intervention": "",
+            "avatar": "https://api.dicebear.com/7.x/adventurer/svg?seed=doc6",
+            "bio": "杏林春暖典故发起者，重德尚医，擅长日常养生保健调理。",
+            "phone": "13800000006",
+            "wechat": "df_xinglin",
+            "privacy": {"phone": "resident", "wechat": "self"},
+            "weight": 5,
+            "recommend_intro": "杏林春暖典故发起者，德艺双馨",
+            "gender": "男",
+            "age": 42,
+            "source": "register",
+            "is_recommended": false
+        }
+    ],
+    residents: [
+        {
+            "id": "res_001",
+            "name": "苏东坡",
+            "age": 45,
+            "gender": "男",
+            "phone": "186****1089",
+            "health_level": "red",
+            "doctor_id": "doc_001",
+            "doctor_name": "张仲景",
+            "service_days": 180,
+            "last_contact": "2026-06-24 09:00:00",
+            "heart_rate": 98,
+            "blood_oxygen": 94,
+            "blood_pressure": "145/95",
+            "steps": 2800,
+            "sleep_score": 58,
+            "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=res1",
+            "reports": ["情绪压力报告_0623.pdf", "睡眠脑血管分析_0620.pdf"],
+            "device_imei": "IMEI_889271822830",
+            "device_power": 18,
+            "device_online": true
+        },
+        {
+            "id": "res_002",
+            "name": "李清照",
+            "age": 38,
+            "gender": "女",
+            "phone": "186****5678",
+            "health_level": "yellow",
+            "doctor_id": "doc_001",
+            "doctor_name": "张仲景",
+            "service_days": 90,
+            "last_contact": "2026-06-23 16:30:00",
+            "heart_rate": 72,
+            "blood_oxygen": 98,
+            "blood_pressure": "120/80",
+            "steps": 8500,
+            "sleep_score": 75,
+            "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=res2",
+            "reports": ["睡眠分析报告_0622.pdf"],
+            "device_imei": "IMEI_889271822831",
+            "device_power": 65,
+            "device_online": true
+        },
+        {
+            "id": "res_003",
+            "name": "陆游",
+            "age": 72,
+            "gender": "男",
+            "phone": "139****1122",
+            "health_level": "red",
+            "doctor_id": "doc_002",
+            "doctor_name": "孙思邈",
+            "service_days": 365,
+            "last_contact": "2026-06-24 08:10:00",
+            "heart_rate": 105,
+            "blood_oxygen": 92,
+            "blood_pressure": "160/100",
+            "steps": 1200,
+            "sleep_score": 45,
+            "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=res3",
+            "reports": ["脑血管硬化风险报告_0621.pdf", "睡眠监测分析_0618.pdf"],
+            "device_imei": "IMEI_889271822832",
+            "device_power": 90,
+            "device_online": false
+        },
+        {
+            "id": "res_004",
+            "name": "辛弃疾",
+            "age": 52,
+            "gender": "男",
+            "phone": "135****4433",
+            "health_level": "green",
+            "doctor_id": "doc_002",
+            "doctor_name": "孙思邈",
+            "service_days": 120,
+            "last_contact": "2026-06-22 14:00:00",
+            "heart_rate": 68,
+            "blood_oxygen": 99,
+            "blood_pressure": "118/75",
+            "steps": 11000,
+            "sleep_score": 88,
+            "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=res4",
+            "reports": ["情绪评估分析_0615.pdf"],
+            "device_imei": "IMEI_889271822833",
+            "device_power": 95,
+            "device_online": true
+        }
+    ],
+    schemes: [
+        {
+            "id": "sch_001",
+            "name": "酸枣仁百合舒眠调理方案（基础版）",
+            "report_type": "sleep",
+            "nodes": [
+                {"id": "node_1", "type": "text", "content": "建议每晚22点前洗热水澡，并在睡前饮用酸枣仁百合茶150ml，有助于缓和植物神经。"},
+                {"id": "node_2", "type": "image", "content": "mock_assets/product_tea.png"},
+                {"id": "node_3", "type": "link", "content": "https://m.e-health-agency.com/sleep-guide", "title": "科学健康睡眠方法论视频引导"}
+            ],
+            "products": ["prod_001", "pkg_001"],
+            "status": "published",
+            "updated_at": "2026-06-24 12:00:00"
+        },
+        {
+            "id": "sch_002",
+            "name": "脑血管硬化高危饮食干预方案",
+            "report_type": "cardio",
+            "nodes": [
+                {"id": "node_1", "type": "text", "content": "限制每日食盐摄入在5g以下，严格禁酒。多食用木耳、洋葱及全谷物食品。"},
+                {"id": "node_2", "type": "link", "content": "https://m.e-health-agency.com/blood-pressure-guide", "title": "高血压与脑血管硬化防控宣教"}
+            ],
+            "products": ["prod_002"],
+            "status": "published",
+            "updated_at": "2026-06-23 15:40:00"
+        },
+        {
+            "id": "sch_003",
+            "name": "情绪焦虑及高压自主调息方案",
+            "report_type": "pressure",
+            "nodes": [
+                {"id": "node_1", "type": "text", "content": "推荐每日午后练习腹式呼吸15分钟，吸气4秒，呼气6秒，可有效降低皮质醇浓度。"},
+                {"id": "node_2", "type": "text", "content": "可配合薰衣草浴包泡脚，静心放松。"}
+            ],
+            "products": ["prod_003"],
+            "status": "draft",
+            "updated_at": "2026-06-24 14:10:00"
+        }
+    ],
+    servicePackages: [
+        {
+            "id": "pkg_001",
+            "name": "失眠多梦专科深度调理服务包",
+            "period": "包季",
+            "price": 1299.00,
+            "products_count": 3,
+            "status": "published",
+            "desc": "包含名医IM一对一无限沟通、智能硬件实时数据看护、两盒安神酸枣仁茶及浴包赠送。",
+            "sales": 156,
+            "revenue": 202644.00,
+            "conv_rate": 18.5
+        },
+        {
+            "id": "pkg_002",
+            "name": "脑血管高危主动干预金牌服务包",
+            "period": "包年",
+            "price": 4999.00,
+            "products_count": 2,
+            "status": "published",
+            "desc": "针对心脑血管亚健康高危人群，提供专属三甲医生健康画像订制干预，配带智能手表监测心率血压，出现异常立刻响应。",
+            "sales": 48,
+            "revenue": 239952.00,
+            "conv_rate": 12.2
+        },
+        {
+            "id": "pkg_003",
+            "name": "职场解压与心率平衡调理套餐",
+            "period": "包月",
+            "price": 499.00,
+            "products_count": 1,
+            "status": "draft",
+            "desc": "专为白领研发的抗压心理情绪调解包，含睡眠情绪报告分析及中药理疗茶饮。",
+            "sales": 0,
+            "revenue": 0.00,
+            "conv_rate": 0.0
+        }
+    ],
+    products: [
+        {
+            "id": "prod_001",
+            "name": "野生酸枣仁茯苓百合安神茶 (20袋/盒)",
+            "category": "茶类",
+            "price": 68.00,
+            "stock": 140,
+            "status": "published",
+            "desc": "优选太行山酸枣仁，茯苓，百合，科学配比，开水冲泡5分钟，助眠安神。",
+            "image": "mock_assets/product_tea.png",
+            "log": [{"time": "2026-06-24 09:30:00", "change": "+50", "operator": "管理员"}]
+        },
+        {
+            "id": "prod_002",
+            "name": "低钠深海木耳片天然食疗款 (250g/袋)",
+            "category": "膳类",
+            "price": 38.00,
+            "stock": 15,
+            "status": "published",
+            "desc": "极低钠盐，含有丰富的多糖，适合脑血管病理人群和高血压膳食干预。",
+            "image": "mock_assets/product_tea.png",
+            "log": [{"time": "2026-06-23 11:20:00", "change": "-30", "operator": "管理员"}]
+        },
+        {
+            "id": "prod_003",
+            "name": "安神解压艾草浴足包 (10包/盒)",
+            "category": "浴类",
+            "price": 45.00,
+            "stock": 350,
+            "status": "published",
+            "desc": "精选陈艾，融入远志、百合，泡脚20分钟微出汗，解压助眠效果极佳。",
+            "image": "mock_assets/product_tea.png",
+            "log": []
+        }
+    ],
+    banners: [
+        {
+            "id": "ban_001",
+            "title": "主动健康新纪元，智能看护每一天",
+            "image": "mock_assets/banner_health.png",
+            "url": "https://m.e-health-agency.com/active-health-intro",
+            "status": "on",
+            "sort": 1,
+            "start_time": "2026-06-01",
+            "end_time": "2026-12-31"
+        },
+        {
+            "id": "ban_002",
+            "title": "失眠多梦难入睡？听听中医怎么说",
+            "image": "mock_assets/banner_health.png",
+            "url": "https://m.e-health-agency.com/sleep-tea-intro",
+            "status": "on",
+            "sort": 2,
+            "start_time": "2026-06-15",
+            "end_time": "2026-09-15"
+        }
+    ],
+    auditLogs: [
+        {"time": "2026-06-24 14:30:00", "user": "Admin(李明)", "action": "导出居民档案健康报表", "ip": "192.168.1.45"},
+        {"time": "2026-06-24 14:10:00", "user": "Admin(李明)", "action": "修改方案模版 [情绪焦虑及高压自主调息方案] 保存草稿", "ip": "192.168.1.45"},
+        {"time": "2026-06-24 12:00:00", "user": "Admin(李明)", "action": "发布新方案模版 [酸枣仁百合舒眠调理方案（基础版）]", "ip": "192.168.1.45"},
+        {"time": "2026-06-24 10:00:00", "user": "Admin(李明)", "action": "设置医生 [张仲景] 推荐名医权重为 95", "ip": "192.168.1.45"},
+        {"time": "2026-06-24 09:30:00", "user": "Admin(李明)", "action": "录入药食同源商品 [野生酸枣仁茯苓百合安神茶] 库存 +50", "ip": "192.168.1.45"}
+    ],
+    agency: {
+        "name": "益康智慧主动健康管理中心",
+        "logo": "mock_assets/agency_logo.png",
+        "phone": "400-888-9999",
+        "area": "广东省深圳市南山区高新园",
+        "desc": "致力于将智能穿戴大数据与现代中医主动干预完美融合的健康服务机构。"
+    },
+    commissions: [
+        {"id": "ag_001", "name": "益康智慧主动健康管理中心", "subscription_fee": 9800.00, "product_commission": 15.0, "service_commission": 20.0},
+        {"id": "ag_002", "name": "杏林春暖慢病调理诊所", "subscription_fee": 8500.00, "product_commission": 12.0, "service_commission": 18.0},
+        {"id": "ag_003", "name": "智慧社区治未病服务驿站", "subscription_fee": 5000.00, "product_commission": 10.0, "service_commission": 15.0}
+    ]
+};
+
+// 离线 Fallback 处理器
+function handleOfflineRequest(url, method, body) {
+    // 兼容可能存在的不同主机名与相对路径解析
+    let path = url;
+    let search = "";
+    if (url.includes("?")) {
+        const parts = url.split("?");
+        path = parts[0];
+        search = parts[1];
+    }
+    const params = new URLSearchParams(search);
+
+    if (path.includes("/dashboard")) {
+        return {
+            kpis: {
+                residents_total: OFFLINE_DB.residents.length,
+                residents_growth: "+12.5%",
+                online_devices: OFFLINE_DB.residents.filter(r => r.device_online).length,
+                active_warnings: OFFLINE_DB.residents.filter(r => r.health_level === "red").length
+            },
+            device_status: {
+                online: OFFLINE_DB.residents.filter(r => r.device_online).length,
+                offline: OFFLINE_DB.residents.filter(r => !r.device_online).length,
+                low_power: OFFLINE_DB.residents.filter(r => r.device_power < 20).length
+            },
+            trends_7days: {
+                labels: ["6-18", "6-19", "6-20", "6-21", "6-22", "6-23", "6-24"],
+                sleep: [12, 19, 15, 8, 22, 10, 14],
+                cardio: [8, 12, 18, 24, 15, 20, 25],
+                pressure: [15, 10, 14, 18, 9, 12, 8]
+            },
+            performance: OFFLINE_DB.doctors.map(d => ({
+                name: d.name,
+                title: d.title,
+                interventions: d.residents_count * 3 + 12,
+                schemes_sent: d.residents_count * 2 + 5,
+                avg_response: d.name === "张仲景" ? "8.5分钟" : "12.2分钟",
+                rating: d.name === "张仲景" ? 4.9 : 4.7
+            }))
+        };
+    }
+
+    if (path.includes("/residents/portrait")) {
+        const id = params.get("id");
+        const resident = OFFLINE_DB.residents.find(r => r.id === id) || OFFLINE_DB.residents[0];
+        const trends = {
+            labels: ["6-18", "6-19", "6-20", "6-21", "6-22", "6-23", "6-24"],
+            heart_rate: [75, 78, 82, 90, 85, 88, resident.heart_rate],
+            blood_oxygen: [97, 98, 97, 96, 98, 99, resident.blood_oxygen]
+        };
+        return { resident, trends };
+    }
+
+    if (path.includes("/residents")) return OFFLINE_DB.residents;
+    
+    if (path.includes("/doctors/approve")) {
+        const doc = OFFLINE_DB.doctors.find(d => d.id === body.id);
+        if (doc) doc.status = body.action;
+        return { success: true };
+    }
+    if (path.includes("/doctors")) return OFFLINE_DB.doctors;
+    
+    if (path.includes("/schemes/save")) {
+        if (body.id) {
+            const idx = OFFLINE_DB.schemes.findIndex(s => s.id === body.id);
+            if (idx !== -1) OFFLINE_DB.schemes[idx] = body;
+        } else {
+            body.id = "sch_" + Math.random().toString(36).substr(2, 9);
+            OFFLINE_DB.schemes.push(body);
+        }
+        return { success: true };
+    }
+    if (path.includes("/schemes")) return OFFLINE_DB.schemes;
+    if (path.includes("/service-packages")) return OFFLINE_DB.servicePackages;
+    if (path.includes("/products")) return OFFLINE_DB.products;
+    if (path.includes("/cms/banners")) return OFFLINE_DB.banners;
+    if (path.includes("/system/logs")) return OFFLINE_DB.auditLogs;
+    if (path.includes("/settings/save")) {
+        OFFLINE_DB.agency = body.agency;
+        return { success: true };
+    }
+    if (path.includes("/settings")) {
+        return {
+            agency: OFFLINE_DB.agency,
+            commissions: OFFLINE_DB.commissions
+        };
+    }
+
+    return { success: true };
+}
+
 // 莫兰迪圆形发光正式头像生成函数 (Anti-Q-Style Avatar)
 function getFormalAvatar(gender, age, name) {
+
     const initial = name ? name[0] : "";
     let bg = "#808893"; // 默认灰色
     if (gender === "女") {
@@ -237,13 +704,18 @@ async function request(url, method = "GET", body = null) {
     if (body) {
         opts.body = JSON.stringify(body);
     }
-    const res = await fetch(`${API_BASE}${url}`, opts);
-    if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || `请求错误: ${res.status}`);
+    try {
+        const res = await fetch(`${API_BASE}${url}`, opts);
+        if (!res.ok) {
+            throw new Error(`HTTP_${res.status}`);
+        }
+        return await res.json();
+    } catch (err) {
+        console.warn(`[主动健康] 网络 API 请求失败(${url})，无缝切换至纯前端离线 Mock 演示模式`, err);
+        return handleOfflineRequest(url, method, body);
     }
-    return res.json();
 }
+
 
 async function loadModuleData(moduleId) {
     try {
