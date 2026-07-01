@@ -1369,9 +1369,19 @@ async function openResidentModal(id) {
     const container = document.getElementById("res-portrait-modal-body");
     if (!container) return;
     
-    // 1. 组装 Loveable 大屏专属 HTML 骨架
+    // 动态载入科技感字体 (Outfit, Noto Sans SC) 以便大屏样式极致对齐
+    if (!document.querySelector('link[href*="fonts.googleapis.com/css2?family=Outfit"]')) {
+        const link = document.createElement("link");
+        link.rel = "stylesheet";
+        link.href = "https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap";
+        document.head.appendChild(link);
+    }
+
+    // 1. 组装 Loveable 大屏专属 HTML 骨架 (注入局部网格及发光背景粒子)
     container.innerHTML = `
         <div class="portrait-screen-wrapper">
+            <div class="cyber-grid"></div>
+            <div class="cyber-glow-bg"></div>
             <div class="large-screen-container">
                 
                 <!-- 顶层标题栏 (Top Header) -->
