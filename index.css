@@ -2527,231 +2527,464 @@ input:checked + .slider:before {
     background: oklch(0.12 0.03 230) !important;
 }
 
-/* 画像三栏主网格 */
-.portrait-main-grid {
-    display: grid;
-    grid-template-columns: 29% 42% 29%;
+/* ==================== 居民健康全息画像大屏 (高保真还原样式) ==================== */
+
+.portrait-screen-wrapper {
+    background: radial-gradient(circle at 50% 50%, #0d1a30 0%, #060a13 100%);
+    font-family: 'Figtree', 'Noto Sans', -apple-system, sans-serif;
+    color: #f8fafc;
+    padding: 16px 22px 24px;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
     gap: 16px;
-    font-family: var(--semi-font-mono), var(--semi-font-sans);
-    height: 700px;
-    overflow: hidden;
+    box-sizing: border-box;
+    min-height: 820px;
+    position: relative;
 }
 
-.portrait-col {
+/* 科技网格背景线 */
+.portrait-screen-wrapper::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: 
+        linear-gradient(rgba(0, 240, 255, 0.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 240, 255, 0.018) 1px, transparent 1px);
+    background-size: 25px 25px;
+    pointer-events: none;
+    border-radius: 16px;
+    z-index: 0;
+}
+
+/* 顶部操作栏 */
+.portrait-screen-header {
     display: flex;
-    flex-direction: column;
-    gap: 12px;
-    height: 100%;
+    justify-content: space-between;
+    align-items: center;
+    height: 48px;
+    border-bottom: 1.5px solid rgba(0, 240, 255, 0.15);
+    position: relative;
+    z-index: 2;
 }
-
-/* 大屏拟态玻璃卡片 */
-.screen-glass-card {
-    background: oklch(1 0 0 / 1.5%);
-    border: 1.2px solid oklch(0.3 0.08 230 / 35%);
-    border-radius: var(--semi-border-radius-md);
-    padding: 12px 14px;
-    box-shadow: inset 0 1px 0 oklch(1 0 0 / 5%);
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.screen-glass-card .title {
-    font-size: 13.5px;
-    font-weight: 800;
-    color: oklch(0.95 0.01 230);
+.portrait-header-left {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.5);
     display: flex;
     align-items: center;
-    gap: 6px;
-    border-bottom: 1px solid oklch(0.3 0.08 230 / 20%);
-    padding-bottom: 6px;
-    margin-bottom: 2px;
+    gap: 10px;
+}
+.portrait-header-left .back-btn {
+    cursor: pointer;
+    color: #00f0ff;
+    font-weight: 700;
+    transition: opacity 0.3s;
+    background: rgba(0, 240, 255, 0.05);
+    border: 1px solid rgba(0, 240, 255, 0.2);
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+.portrait-header-left .back-btn:hover {
+    opacity: 0.8;
+}
+.portrait-header-title {
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: 0.3em;
+    background: linear-gradient(180deg, #ffffff 30%, #00f0ff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 15px rgba(0, 240, 255, 0.25);
+}
+.portrait-header-right {
+    font-size: 18px;
+    color: rgba(0, 240, 255, 0.7);
+    cursor: pointer;
+    transition: color 0.3s, transform 0.3s;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.05);
+}
+.portrait-header-right:hover {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.3);
+    transform: scale(1.05);
 }
 
-/* 核心八大体征监测卡片 */
-.portrait-vitals-grid {
+/* 上排三栏大布局 */
+.portrait-row-top {
+    display: grid;
+    grid-template-columns: 28% 44% 28%;
+    gap: 16px;
+    z-index: 2;
+    position: relative;
+    height: 480px;
+}
+
+/* 下排三栏等宽布局 */
+.portrait-row-bottom {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    z-index: 2;
+    position: relative;
+    height: 230px;
+}
+
+/* 磨砂玻璃大屏卡片 */
+.screen-glass-card {
+    background: rgba(10, 18, 32, 0.55);
+    border: 1px solid rgba(0, 240, 255, 0.12);
+    box-shadow: inset 0 0 16px rgba(0, 240, 255, 0.04), 0 8px 32px rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(14px);
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    z-index: 2;
+    overflow: hidden;
+    position: relative;
+}
+.screen-glass-card .card-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: #fff;
+    border-left: 3px solid #00f0ff;
+    padding-left: 8px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    letter-spacing: 0.05em;
+}
+
+/* 居民基本信息小卡 & 四格横排 */
+.vitals-base-info-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-top: 4px;
+}
+.vitals-base-info-block {
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    padding: 5px 2px;
+    text-align: center;
+}
+.vitals-base-info-block .label {
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.4);
+    margin-bottom: 2px;
+}
+.vitals-base-info-block .value {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #fff;
+}
+
+/* 七大体征小磁贴 */
+.portrait-vitals-grid-v2 {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 8px;
 }
-
-.vital-metric-card {
-    background: oklch(1 0 0 / 1%);
-    border: 1px solid oklch(0.3 0.08 230 / 15%);
-    border-radius: var(--semi-border-radius-sm);
-    padding: 8px 10px;
+.vital-tile-card {
+    background: rgba(255, 255, 255, 0.015);
+    border: 1px solid rgba(0, 240, 255, 0.08);
+    border-radius: 8px;
+    padding: 6px 10px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 1px;
     position: relative;
-    transition: var(--semi-transition-smooth);
+    transition: all 0.3s ease;
 }
-.vital-metric-card:hover {
-    border-color: var(--screen-accent);
-    background: oklch(1 0 0 / 3%);
+.vital-tile-card:hover {
+    border-color: rgba(0, 240, 255, 0.25);
+    background: rgba(0, 240, 255, 0.025);
 }
-
-.vital-metric-top {
+.vital-tile-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 11px;
-    color: oklch(0.7 0.02 230);
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.45);
 }
-
-.vital-metric-val {
-    font-size: 18px;
+.vital-tile-val {
+    font-size: 15.5px;
     font-weight: 800;
-    color: oklch(0.95 0.01 230);
     font-family: var(--semi-font-mono);
+    color: #fff;
 }
-.vital-metric-val .unit {
-    font-size: 10.5px;
+.vital-tile-val .unit {
+    font-size: 9px;
     font-weight: normal;
-    color: oklch(0.7 0.02 230);
+    color: rgba(255, 255, 255, 0.45);
     margin-left: 2px;
 }
 
-/* 状态小圆点 */
+/* 状态小脉冲灯 */
 .status-dot-pulse {
-    width: 6px;
-    height: 6px;
+    width: 5px;
+    height: 5px;
     border-radius: 50%;
     display: inline-block;
 }
-.status-dot-pulse.green { background-color: var(--semi-color-success); box-shadow: 0 0 6px var(--semi-color-success); }
-.status-dot-pulse.yellow { background-color: var(--semi-color-warning); box-shadow: 0 0 6px var(--semi-color-warning); }
-.status-dot-pulse.red { background-color: var(--semi-color-danger); box-shadow: 0 0 6px var(--semi-color-danger); animation: alert-ping-anim 1.2s infinite; }
+.status-dot-pulse.green { background-color: #10b981; box-shadow: 0 0 5px #10b981; }
+.status-dot-pulse.yellow { background-color: #f59e0b; box-shadow: 0 0 5px #f59e0b; }
+.status-dot-pulse.red { background-color: #ef4444; box-shadow: 0 0 5px #ef4444; animation: pulse-red-anim 1.2s infinite; }
+@keyframes pulse-red-anim {
+    0% { transform: scale(0.9); opacity: 0.5; }
+    50% { transform: scale(1.2); opacity: 1; }
+    100% { transform: scale(0.9); opacity: 0.5; }
+}
 
-/* 3D 数字人投影容器 */
-.digital-twin-container {
+/* 血脂四项指标卡片 */
+.lipid-profile-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 10px;
+    font-size: 11px;
+}
+.lipid-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 6px;
+    padding: 4px 8px;
+}
+.lipid-badge {
+    font-size: 8.5px;
+    padding: 1px 5px;
+    border-radius: 10px;
+    font-weight: 700;
+}
+.lipid-badge.green { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+.lipid-badge.yellow { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+.lipid-badge.red { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+
+/* 3D 数字人全息底座 */
+.hologram-stage {
     flex: 1;
     position: relative;
-    border: 1.2px solid oklch(0.3 0.08 230 / 25%);
-    border-radius: var(--semi-border-radius-lg);
-    background: radial-gradient(circle at center, oklch(0.2 0.05 230 / 30%) 0%, oklch(0.12 0.03 230 / 10%) 80%);
-    overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
+    border: 1px solid rgba(0, 240, 255, 0.12);
+    border-radius: 12px;
+    background: radial-gradient(circle at center, rgba(12, 26, 48, 0.5) 0%, rgba(6, 10, 19, 0.2) 80%);
+    overflow: hidden;
 }
-
-.human-hologram-img {
-    height: 90%;
-    max-height: 420px;
-    object-fit: contain;
-    mix-blend-mode: screen; /* 科技全息融合底色 */
-    opacity: 0.88;
-    filter: drop-shadow(0 0 12px oklch(0.55 0.13 195 / 40%));
-}
-
-.hologram-base-plate {
+.hologram-stage-base {
     position: absolute;
-    bottom: 24px;
-    width: 140px;
-    height: 14px;
-    background: radial-gradient(ellipse at center, oklch(0.55 0.13 195 / 40%) 0%, oklch(0.55 0.13 195 / 0%) 70%);
+    bottom: 30px;
+    width: 180px;
+    height: 16px;
+    background: radial-gradient(ellipse at center, rgba(0, 240, 255, 0.35) 0%, rgba(0, 240, 255, 0) 70%);
     border-radius: 50%;
     transform: rotateX(75deg);
-    box-shadow: 0 0 15px oklch(0.55 0.13 195 / 50%);
-    animation: base-glow-anim 2.5s infinite alternate;
+    box-shadow: 0 0 25px rgba(0, 240, 255, 0.55);
+    animation: base-glow-anim-v2 3s infinite alternate ease-in-out;
 }
-@keyframes base-glow-anim {
-    0% { transform: rotateX(75deg) scale(0.9); opacity: 0.5; }
-    100% { transform: rotateX(75deg) scale(1.15); opacity: 0.9; }
+@keyframes base-glow-anim-v2 {
+    0% { transform: rotateX(75deg) scale(0.95); opacity: 0.45; }
+    100% { transform: rotateX(75deg) scale(1.18); opacity: 0.9; }
 }
 
-/* 数字人身体两侧悬浮标签 */
-.human-hologram-tag {
+/* 身体两侧 10 悬浮标签泡泡 */
+.hologram-bubble {
     position: absolute;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 10.5px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-size: 10px;
     font-weight: 700;
     display: flex;
     align-items: center;
     gap: 4px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
     z-index: 5;
+    animation: bubble-float-anim 4s infinite ease-in-out;
 }
-.human-hologram-tag.red {
-    background: oklch(0.62 0.23 22 / 12%);
-    border: 1px solid oklch(0.62 0.23 22 / 40%);
-    color: oklch(0.7 0.2 22);
+.hologram-bubble.green {
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    color: #10b981;
 }
-.human-hologram-tag.yellow {
-    background: oklch(0.78 0.16 75 / 10%);
-    border: 1px solid oklch(0.78 0.16 75 / 40%);
-    color: oklch(0.75 0.15 75);
+.hologram-bubble.yellow {
+    background: rgba(245, 158, 11, 0.12);
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    color: #f59e0b;
 }
-.human-hologram-tag.green {
-    background: oklch(0.7 0.16 155 / 10%);
-    border: 1px solid oklch(0.7 0.16 155 / 40%);
-    color: oklch(0.7 0.16 155);
+.hologram-bubble.blue {
+    background: rgba(0, 102, 255, 0.12);
+    border: 1px solid rgba(0, 102, 255, 0.4);
+    color: #0088ff;
 }
 
-/* 罗盘与中医子午流注罗盘样式 */
-.organ-clock-container {
+/* 十个气泡位置定位，完美贴合数字人相应部位 */
+.bubble-pos-l1 { top: 12%; left: 8%; animation-delay: 0s; }
+.bubble-pos-l2 { top: 28%; left: 4%; animation-delay: 0.5s; }
+.bubble-pos-l3 { top: 44%; left: 6%; animation-delay: 1s; }
+.bubble-pos-l4 { top: 60%; left: 3%; animation-delay: 1.5s; }
+.bubble-pos-l5 { top: 76%; left: 8%; animation-delay: 2s; }
+
+.bubble-pos-r1 { top: 12%; right: 8%; animation-delay: 0.2s; }
+.bubble-pos-r2 { top: 28%; right: 4%; animation-delay: 0.7s; }
+.bubble-pos-r3 { top: 44%; right: 6%; animation-delay: 1.2s; }
+.bubble-pos-r4 { top: 60%; right: 3%; animation-delay: 1.7s; }
+.bubble-pos-r5 { top: 76%; right: 8%; animation-delay: 2.2s; }
+
+@keyframes bubble-float-anim {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+}
+
+/* 下排第二排生理指标趋势 Tab 键 */
+.trend-tab-list {
     display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 6px 0;
+    gap: 6px;
+    font-size: 10px;
+    color: rgba(255,255,255,0.4);
+    margin: 0;
+}
+.trend-tab-item {
+    cursor: pointer;
+    padding: 1px 6px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+.trend-tab-item.active {
+    color: #00f0ff;
+    background: rgba(0, 240, 255, 0.1);
+    font-weight: 700;
 }
 
-.organ-clock-dial {
-    width: 110px;
-    height: 110px;
+/* 疾病风险预测进度条 */
+.disease-risk-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 16px;
+    font-size: 10.5px;
+    flex: 1;
+    align-content: space-between;
+}
+.disease-risk-item {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+.disease-risk-header {
+    display: flex;
+    justify-content: space-between;
+    color: rgba(255, 255, 255, 0.65);
+}
+.disease-risk-bar-bg {
+    height: 5px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+    overflow: hidden;
+}
+.disease-risk-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    box-shadow: 0 0 6px currentColor;
+    transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.disease-risk-bar-fill.red { background-color: #ef4444; color: #ef4444; }
+.disease-risk-bar-fill.yellow { background-color: #f59e0b; color: #f59e0b; }
+.disease-risk-bar-fill.cyan { background-color: #00f0ff; color: #00f0ff; }
+
+/* 中医 12 经络子午流注发光大表盘 */
+.organ-radial-clock {
+    width: 130px;
+    height: 130px;
     border-radius: 50%;
-    border: 2px solid oklch(0.3 0.08 230 / 30%);
-    background: radial-gradient(circle, oklch(0.15 0.04 230) 40%, oklch(0.1 0.02 230) 100%);
+    border: 1.5px dashed rgba(0, 240, 255, 0.22);
+    background: radial-gradient(circle, rgba(12, 24, 44, 0.75) 30%, rgba(6, 10, 19, 0.95) 100%);
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: inset 0 0 10px rgba(0,0,0,0.5), 0 0 15px oklch(0.55 0.13 195 / 15%);
+    box-shadow: inset 0 0 15px rgba(0,0,0,0.8), 0 0 25px rgba(0, 240, 255, 0.08);
 }
-
-.organ-clock-hand {
+.organ-radial-clock::before {
+    content: '';
     position: absolute;
-    width: 2px;
-    height: 46px;
-    background: linear-gradient(to top, transparent 40%, var(--screen-accent) 100%);
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 240, 255, 0.08);
+}
+.organ-radial-pointer {
+    position: absolute;
+    width: 2.5px;
+    height: 54px;
+    background: linear-gradient(to top, transparent 20%, #00f0ff 100%);
     bottom: 50%;
-    left: calc(50% - 1px);
+    left: calc(50% - 1.25px);
     transform-origin: bottom center;
     z-index: 2;
-    transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-
-.organ-clock-center {
-    width: 6px;
-    height: 6px;
-    background-color: var(--screen-accent);
+.organ-radial-center {
+    width: 7px;
+    height: 7px;
+    background-color: #00f0ff;
     border-radius: 50%;
-    box-shadow: 0 0 6px var(--screen-accent);
+    box-shadow: 0 0 6px #00f0ff;
     z-index: 3;
 }
-
-.organ-clock-label {
+.organ-radial-label {
     position: absolute;
-    font-size: 8.5px;
-    color: oklch(0.55 0.02 230);
+    font-size: 7.5px;
     font-weight: 700;
+    color: rgba(255, 255, 255, 0.35);
+    transition: color 0.3s, text-shadow 0.3s, font-size 0.3s;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.organ-radial-label.active {
+    color: #00f0ff;
+    text-shadow: 0 0 6px #00f0ff;
+    font-weight: 900;
+    font-size: 9px;
 }
 
-/* 器官说明区 */
-.organ-verdict-box {
+/* 时辰经络判定文案面板对齐 */
+.organ-verdict-column {
     flex: 1;
     display: flex;
     flex-direction: column;
     gap: 4px;
-    font-size: 11.5px;
-    color: oklch(0.8 0.02 230);
+    font-size: 10.5px;
+    color: rgba(255, 255, 255, 0.85);
     line-height: 1.45;
 }
-.organ-verdict-box strong {
-    color: oklch(0.95 0.01 230);
+.organ-verdict-title-bar {
+    font-size: 12.5px;
+    font-weight: 800;
+    color: #00f0ff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1.5px solid rgba(0, 240, 255, 0.15);
+    padding-bottom: 4px;
+    margin-bottom: 2px;
 }
+
 
 
 

@@ -1122,18 +1122,13 @@
     
     <!-- 模态框 2：居民健康画像弹窗 (全深色生理数字人大屏弹窗) -->
     <div class="modal modal-lg screen-theme-modal" id="resident-portrait-modal">
-        <div class="modal-dialog" style="max-width: 1260px; width: 96vw; background: oklch(0.12 0.03 230); color: oklch(0.95 0.01 230); border: 1.5px solid oklch(0.3 0.08 230 / 40%); box-shadow: 0 0 30px oklch(0.55 0.13 195 / 20%); border-radius: var(--semi-border-radius-xl);">
-            <div class="modal-header" style="border-bottom: 1px solid oklch(0.3 0.08 230 / 30%); padding-bottom: 12px; margin-bottom: 0;">
-                <h3 class="modal-title" id="res-portrait-title" style="color: oklch(0.95 0.01 230); font-weight: 800; font-size:16px; letter-spacing: 0.1em; display: flex; align-items: center; gap: 8px;">
-                    <span style="color: var(--screen-accent);">🧬</span> 生理数字人模型与主动健康档案
-                </h3>
-                <span class="modal-close" data-close="resident-portrait-modal" style="color: oklch(0.6 0.02 230); cursor:pointer;">&times;</span>
-            </div>
-            <div class="modal-body" id="res-portrait-modal-body" style="padding: 18px 24px; background: oklch(0.12 0.03 230);">
-                <!-- 由 JS 动态注入高科技生理三栏页面 -->
+        <div class="modal-dialog" style="max-width: 1360px; width: 98vw; background: #060a13; color: #f8fafc; border: 1.5px solid rgba(0, 240, 255, 0.15); box-shadow: 0 0 50px rgba(0, 240, 255, 0.2); border-radius: 16px;">
+            <div class="modal-body" id="res-portrait-modal-body" style="padding: 0; background: #060a13; min-height: 800px; border-radius: 16px; overflow: hidden; position: relative;">
+                <!-- 由 JS 动态注入高保真生理大屏 -->
             </div>
         </div>
     </div>
+
     
     <!-- 模态框 3：调理方案编辑器与手机预览弹窗 (超宽弹窗) -->
     <div class="modal modal-lg" id="scheme-editor-modal">
