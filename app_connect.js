@@ -392,34 +392,49 @@ function handleOfflineRequest(url, method, body) {
     const params = new URLSearchParams(search);
 
     if (path.includes("/dashboard")) {
+        const total_residents = OFFLINE_DB.residents.length;
+        const online_devices = OFFLINE_DB.residents.filter(r => r.device_online).length;
+        const low_power_devices = OFFLINE_DB.residents.filter(r => r.device_power < 20).length;
+        const active_warnings = OFFLINE_DB.residents.filter(r => r.health_level === "red").length;
+        
+        const doc_perf = OFFLINE_DB.doctors.filter(d => d.status === "approved").map(d => ({
+            name: d.name,
+            title: d.title,
+            interventions: d.residents_count * 3 + 12,
+            schemes_sent: d.residents_count * 2 + 5,
+            avg_response: d.name === "张仲景" ? "8.5分钟" : "12.2分钟",
+            rating: d.name === "张仲景" ? 4.9 : 4.7
+        })).sort((a, b) => b.interventions - a.interventions);
+
         return {
             kpis: {
-                residents_total: OFFLINE_DB.residents.length,
+                residents_total: total_residents,
                 residents_growth: "+12.5%",
-                online_devices: OFFLINE_DB.residents.filter(r => r.device_online).length,
-                active_warnings: OFFLINE_DB.residents.filter(r => r.health_level === "red").length
+                online_devices: online_devices,
+                active_warnings: active_warnings,
+                sales_total: OFFLINE_DB.servicePackages.reduce((acc, curr) => acc + curr.sales, 0),
+                revenue_total: OFFLINE_DB.servicePackages.reduce((acc, curr) => acc + curr.revenue, 0)
             },
-            device_status: {
-                online: OFFLINE_DB.residents.filter(r => r.device_online).length,
-                offline: OFFLINE_DB.residents.filter(r => !r.device_online).length,
-                low_power: OFFLINE_DB.residents.filter(r => r.device_power < 20).length
+            warnings_ratio: {
+                sleep: 35,
+                cardio: 45,
+                pressure: 20
             },
-            trends_7days: {
+            chart_7days: {
                 labels: ["6-18", "6-19", "6-20", "6-21", "6-22", "6-23", "6-24"],
                 sleep: [12, 19, 15, 8, 22, 10, 14],
                 cardio: [8, 12, 18, 24, 15, 20, 25],
                 pressure: [15, 10, 14, 18, 9, 12, 8]
             },
-            performance: OFFLINE_DB.doctors.map(d => ({
-                name: d.name,
-                title: d.title,
-                interventions: d.residents_count * 3 + 12,
-                schemes_sent: d.residents_count * 2 + 5,
-                avg_response: d.name === "张仲景" ? "8.5分钟" : "12.2分钟",
-                rating: d.name === "张仲景" ? 4.9 : 4.7
-            }))
+            doctors_performance: doc_perf,
+            device_status: {
+                online: online_devices,
+                offline: total_residents - online_devices,
+                low_power: low_power_devices
+            }
         };
     }
+
 
     if (path.includes("/residents/portrait")) {
         const id = params.get("id");
