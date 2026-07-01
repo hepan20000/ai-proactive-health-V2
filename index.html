@@ -14,7 +14,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <!-- 引入样式 -->
-    <link rel="stylesheet" href="index.css?v=force_update_20260630_v4">
+    <link rel="stylesheet" href="index.css?v=force_update_20260701_v6">
 </head>
 <body>
 
@@ -1123,7 +1123,7 @@
     <!-- 模态框 2：居民健康画像弹窗 (全深色生理数字人大屏弹窗) -->
     <div class="modal modal-lg screen-theme-modal" id="resident-portrait-modal">
         <div class="modal-dialog" style="max-width: 1360px; width: 98vw; background: #060a13; color: #f8fafc; border: 1.5px solid rgba(0, 240, 255, 0.15); box-shadow: 0 0 50px rgba(0, 240, 255, 0.2); border-radius: 16px;">
-            <div class="modal-body" id="res-portrait-modal-body" style="padding: 0; background: #060a13; min-height: 800px; border-radius: 16px; overflow: hidden; position: relative;">
+            <div class="modal-body" id="res-portrait-modal-body" style="padding: 0; background: #060a13; min-height: 800px; max-height: 90vh; border-radius: 16px; overflow-y: auto; overflow-x: hidden; position: relative;">
                 <!-- 由 JS 动态注入高保真生理大屏 -->
             </div>
         </div>
@@ -1469,6 +1469,6 @@
     </div>
 
     <!-- ==================== 前后端连接逻辑 ==================== -->
-    <script src="app_connect.js?v=force_update_20260630_v4"></script>
+    <script src="app_connect.js?v=force_update_20260701_v6"></script>
 </body>
 </html>
